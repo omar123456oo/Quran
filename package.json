@@ -1,0 +1,10 @@
+{
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "for f in tests/browser/0*.js; do node $f || exit 1; done"
+  },
+  "dependencies": {
+    "git": "^0.1.5"
+  }
+}
