@@ -7,12 +7,17 @@ const QuranDisplay = {
     surahs: [],
     currentSurah: null,
     currentView: 'surah', // 'surah', 'juz', or 'page'
+    // Quranic text always comes from this single edition, independent of the selected reciter.
+    TEXT_EDITION: 'quran-uthmani',
+    selectedAyah: null,   // { surah, ayah } chosen by the user in the reader (distinct from the playing ayah)
+    highlightedKey: null,
 
     /**
      * Initialize the module
      */
     async init() {
         console.log('Initializing Quran Display...');
+        this.setupPlaybackSync();
 
         try {
             App.showLoading();
@@ -25,6 +30,8 @@ const QuranDisplay = {
 
             // Setup tab navigation
             this.setupTabs();
+
+            PlaybackStore.emit(['meta']);
 
             App.hideLoading();
         } catch (error) {
@@ -209,12 +216,12 @@ const QuranDisplay = {
     /**
      * Load and display a Surah
      */
-    async loadSurah(surahNumber) {
+    async loadSurah(surahNumber, focusAyah) {
         try {
             App.showLoading();
 
             // Get Surah data with Arabic text
-            const surahData = await APIService.getSurah(surahNumber, 'ar.alafasy');
+            const surahData = await APIService.getSurah(surahNumber, this.TEXT_EDITION);
 
             // Get translation if enabled
             let translationData = null;
@@ -231,11 +238,15 @@ const QuranDisplay = {
             this.displaySurah(surahData, translationData);
 
             // Navigate to Surah page
-            document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('surahPage').classList.remove('hidden');
+            App.showReader();
 
-            // Save as last read position
+            // Save as last read position (the user's reading position, not the playback position)
             Bookmarks.saveLastRead(surahNumber, 1);
+            const first = surahData.ayahs[0];
+            PlaybackStore.setReading({ surah: surahNumber, ayah: 1, page: first ? first.page : null });
+
+            if (focusAyah) this.scrollToAyah(surahNumber, focusAyah, false);
+            else window.scrollTo({ top: 0 });
 
             App.hideLoading();
         } catch (error) {
@@ -264,16 +275,16 @@ const QuranDisplay = {
                         <span><i class="fas fa-book-open"></i> ${surah.numberOfAyahs} آية</span>
                         <span><i class="fas fa-map-marker-alt"></i> ${revelationType}</span>
                     </div>
-                    <button class="btn btn-primary mt-4" onclick="AudioPlayer.playFullSurah(${surah.number})" style="display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-play-circle"></i>
-                        تشغيل السورة كاملة
-                    </button>
+                    ${this.playActions('surah', surah.number, 'تشغيل السورة كاملة')}
                 </div>
             </div>
         `;
 
-        // Display Bismillah for all surahs except Al-Tawbah (Surah 9)
-        if (surah.number !== 1 && surah.number !== 9) {
+        // The source text of the first ayah may already begin with the Bismillah; never show it twice
+        // and never edit the source text.
+        const firstText = (surah.ayahs[0] && surah.ayahs[0].text || '').replace(/^\uFEFF/, '');
+        const textHasBismillah = firstText.startsWith('بِسْمِ');
+        if (surah.number !== 1 && surah.number !== 9 && !textHasBismillah) {
             html += `
                 <div class="card mb-4 text-center">
                     <div class="arabic-text" style="font-size: var(--text-3xl);">
@@ -305,7 +316,7 @@ const QuranDisplay = {
         const hizbQuarter = ayah.hizbQuarter || '';
         
         return `
-            <div class="ayah-container" data-ayah="${ayah.number}" data-surah="${surahNumber}" data-number-in-surah="${ayah.numberInSurah}" data-juz="${juzNumber}" data-page="${pageNumber}">
+            <div class="ayah-container" tabindex="-1" data-ayah="${ayah.number}" data-surah="${surahNumber}" data-number-in-surah="${ayah.numberInSurah}" data-juz="${juzNumber}" data-page="${pageNumber}">
                 <!-- معلومات الجزء والصفحة -->
                 <div class="ayah-meta" style="display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
                     ${juzNumber ? `
@@ -329,17 +340,17 @@ const QuranDisplay = {
                 </div>
 
                 <div class="ayah-arabic">
-                    ${ayah.text} <span style="color: var(--color-accent); font-weight: 700;">(${ayah.numberInSurah})</span>
+                    ${QuranUtil.esc(ayah.text)} <span class="ayah-number" aria-label="آية ${ayah.numberInSurah}">﴿${QuranUtil.toArabicDigits(ayah.numberInSurah)}﴾</span>
                 </div>
 
                 ${translation ? `
                     <div class="ayah-translation">
-                        ${translation.text}
+                        ${QuranUtil.esc(translation.text)}
                     </div>
                 ` : ''}
                 
                 <div class="ayah-controls">
-                    <button class="btn btn-icon play-ayah-btn" title="استماع">
+                    <button class="btn btn-icon play-ayah-btn" title="استماع" aria-label="استماع إلى الآية ${ayah.numberInSurah}">
                         <i class="fas fa-play"></i>
                     </button>
                     <button class="btn btn-icon tafseer-btn" title="التفسير">
@@ -360,6 +371,16 @@ const QuranDisplay = {
      * Setup Ayah interactions (play, tafseer, bookmark, etc.)
      */
     setupAyahInteractions() {
+        // Select an ayah (reading position) by clicking its text area
+        document.querySelectorAll('.ayah-container').forEach(container => {
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('button')) return;
+                this.selectAyah(container);
+            });
+        });
+        this.highlightedKey = null;
+        this.applyPlaybackHighlight();
+
         // Play buttons
         document.querySelectorAll('.play-ayah-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -423,7 +444,7 @@ const QuranDisplay = {
             App.showLoading();
             
             // Load Juz data
-            const juzData = await APIService.getJuz(juzNumber, 'ar.alafasy');
+            const juzData = await APIService.getJuz(juzNumber, this.TEXT_EDITION);
             
             // Get translation if enabled
             let translationData = null;
@@ -441,8 +462,7 @@ const QuranDisplay = {
             this.displayJuz(juzData, translationData, juzNumber);
 
             // Navigate to Surah page
-            document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('surahPage').classList.remove('hidden');
+            App.showReader();
 
             App.hideLoading();
         } catch (error) {
@@ -467,10 +487,7 @@ const QuranDisplay = {
                     <div class="surah-meta" style="justify-content: center;">
                         <span><i class="fas fa-book-open"></i> ${arabicData.ayahs.length} آية</span>
                     </div>
-                    <button class="btn btn-primary mt-4" onclick="AudioPlayer.playFullJuz(${juzNumber})" style="display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-play-circle"></i>
-                        تشغيل الجزء كاملاً
-                    </button>
+                    ${this.playActions('juz', juzNumber, 'تشغيل الجزء كاملاً')}
                 </div>
             </div>
         `;
@@ -528,7 +545,7 @@ const QuranDisplay = {
             App.showLoading();
             
             // Load Page data
-            const pageData = await APIService.getPage(pageNumber, 'ar.alafasy');
+            const pageData = await APIService.getPage(pageNumber, this.TEXT_EDITION);
             
             // Get translation if enabled
             let translationData = null;
@@ -546,8 +563,8 @@ const QuranDisplay = {
             this.displayPage(pageData, translationData, pageNumber);
 
             // Navigate to Surah page
-            document.getElementById('homePage').classList.add('hidden');
-            document.getElementById('surahPage').classList.remove('hidden');
+            App.showReader();
+            PlaybackStore.setReading({ page: pageNumber });
 
             App.hideLoading();
         } catch (error) {
@@ -572,10 +589,7 @@ const QuranDisplay = {
                     <div class="surah-meta" style="justify-content: center;">
                         <span><i class="fas fa-book-open"></i> ${arabicData.ayahs.length} آية</span>
                     </div>
-                    <button class="btn btn-primary mt-4" onclick="AudioPlayer.playFullPage(${pageNumber})" style="display: inline-flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-play-circle"></i>
-                        تشغيل الصفحة كاملة
-                    </button>
+                    ${this.playActions('page', pageNumber, 'تشغيل الصفحة كاملة')}
                 </div>
             </div>
         `;
@@ -623,6 +637,114 @@ const QuranDisplay = {
 
         // Setup Ayah interactions
         this.setupAyahInteractions();
+    },
+
+    /**
+     * HTML for the play / play next / queue / playlist actions of a Surah, page or Juz.
+     */
+    playActions(kind, ref, playLabel) {
+        const sel = `data-kind="${kind}" data-ref="${ref}"`;
+        return `
+            <div class="play-actions" role="group" aria-label="خيارات التشغيل">
+                <button class="btn btn-primary" ${sel} onclick="AudioPlayer.playNow(this.dataset.kind, +this.dataset.ref)">
+                    <i class="fas fa-play-circle" aria-hidden="true"></i> ${playLabel}
+                </button>
+                <button class="btn btn-secondary" ${sel} onclick="AudioPlayer.playNextItem(this.dataset.kind, +this.dataset.ref)">
+                    <i class="fas fa-forward-step" aria-hidden="true"></i> تشغيل التالي
+                </button>
+                <button class="btn btn-secondary" ${sel} onclick="AudioPlayer.addToQueue(this.dataset.kind, +this.dataset.ref)">
+                    <i class="fas fa-list-ol" aria-hidden="true"></i> إلى الطابور
+                </button>
+                ${kind === 'surah' ? `<button class="btn btn-secondary" onclick="PlaylistsUI.addSurahToSelected(${ref})">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i> إلى قائمة تشغيل
+                </button>` : ''}
+            </div>`;
+    },
+
+    /** Mark an ayah as the user's selected ayah (does not affect playback). */
+    selectAyah(container) {
+        document.querySelectorAll('.ayah-container.ayah-selected').forEach(el => el.classList.remove('ayah-selected'));
+        container.classList.add('ayah-selected');
+        const surah = parseInt(container.dataset.surah, 10);
+        const ayah = parseInt(container.dataset.numberInSurah, 10);
+        const page = parseInt(container.dataset.page, 10) || null;
+        this.selectedAyah = { surah, ayah };
+        PlaybackStore.setReading({ surah, ayah, page });
+        Bookmarks.saveLastRead(surah, ayah);
+    },
+
+    /** Keep the reader in step with playback. Subscribed once. */
+    setupPlaybackSync() {
+        if (this._syncBound) return;
+        this._syncBound = true;
+        PlaybackStore.subscribe((state, keys) => {
+            if (keys.includes('ayah') || keys.includes('surah') || keys.includes('itemId') || keys.includes('meta')) {
+                this.applyPlaybackHighlight(true);
+            }
+            if (keys.includes('itemId') || keys.includes('status') || keys.includes('ayah')) this.updateJumpButton();
+        });
+        const follow = document.getElementById('followPlaybackToggle');
+        if (follow) {
+            follow.checked = PlayerState.prefs.followPlayback;
+            follow.addEventListener('change', () => {
+                PlayerState.prefs.followPlayback = follow.checked;
+                PlayerState.persist();
+            });
+        }
+        const jump = document.getElementById('jumpToPlayingBtn');
+        if (jump) jump.addEventListener('click', () => this.jumpToPlaying());
+        this.updateJumpButton();
+    },
+
+    /** Highlight the playing ayah (class only — the selected ayah keeps its own style). */
+    applyPlaybackHighlight(scroll) {
+        const s = PlaybackStore.get();
+        const active = s.status === 'playing' || s.status === 'buffering' || s.status === 'loading' || s.status === 'paused';
+        const key = active && s.surah && s.ayah ? `${s.surah}:${s.ayah}` : null;
+        const changed = key !== this.highlightedKey;
+        document.querySelectorAll('.ayah-container.ayah-playing').forEach(el => el.classList.remove('ayah-playing'));
+        this.highlightedKey = key;
+        if (!key) return;
+        const el = document.querySelector(`.ayah-container[data-surah="${s.surah}"][data-number-in-surah="${s.ayah}"]`);
+        if (!el) return;
+        el.classList.add('ayah-playing');
+        const readerVisible = !document.getElementById('surahPage').classList.contains('hidden');
+        if (scroll && changed && readerVisible && PlayerState.prefs.followPlayback && s.status !== 'paused') {
+            const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+            el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+        }
+    },
+
+    scrollToAyah(surah, ayah, smooth) {
+        const el = document.querySelector(`.ayah-container[data-surah="${surah}"][data-number-in-surah="${ayah}"]`);
+        if (!el) return false;
+        const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+        el.scrollIntoView({ behavior: smooth && !reduce ? 'smooth' : 'auto', block: 'center' });
+        return true;
+    },
+
+    /** Go to the reader at the ayah that is currently playing (loads its Surah if needed). */
+    async jumpToPlaying() {
+        const s = PlaybackStore.get();
+        if (!s.surah) {
+            App.showToast('لا يوجد تشغيل حالي', 'info');
+            return;
+        }
+        const el = document.querySelector(`.ayah-container[data-surah="${s.surah}"][data-number-in-surah="${s.ayah}"]`);
+        if (el) {
+            App.showReader();
+            this.scrollToAyah(s.surah, s.ayah, true);
+        } else {
+            await this.loadSurah(s.surah, s.ayah);
+        }
+        this.applyPlaybackHighlight();
+    },
+
+    updateJumpButton() {
+        const btn = document.getElementById('jumpToPlayingBtn');
+        if (!btn) return;
+        const s = PlaybackStore.get();
+        btn.hidden = !s.surah || s.status === 'idle';
     },
 
     /**

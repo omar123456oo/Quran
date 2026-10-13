@@ -16,35 +16,74 @@ const DigitalMushaf = {
      */
     init() {
         console.log('Initializing Digital Mushaf...');
-        this.currentPage = parseInt(localStorage.getItem('mushaf_last_page')) || 1;
+        const saved = parseInt(localStorage.getItem('mushaf_last_page'), 10);
+        this.currentPage = saved >= 1 && saved <= this.totalPages ? saved : 1;
         this.loadPage(this.currentPage);
         this.setupKeyboardControls();
+        this.setupPlaybackSync();
+    },
+
+    /**
+     * يتابع حالة التشغيل: زر "صفحة التشغيل" وتقليب الصفحة تلقائيًا عند تفعيل المتابعة.
+     * القراءة اليدوية (currentPage) منفصلة عن صفحة التشغيل ولا تتغير إلا بالتنقل أو بالمتابعة.
+     */
+    setupPlaybackSync() {
+        if (this._syncBound) return;
+        this._syncBound = true;
+        PlaybackStore.subscribe((state, keys) => {
+            if (App.currentPage !== 'mushaf') return;
+            if (!keys.includes('page') && !keys.includes('status') && !keys.includes('itemId')) return;
+            this.updatePlayingControls();
+            const turning = state.status === 'playing' || state.status === 'buffering';
+            if (turning && keys.includes('page') && state.page && state.page !== this.currentPage &&
+                PlayerState.prefs.followPlayback) {
+                this.loadPage(state.page, { silent: true });
+            }
+        });
+    },
+
+    updatePlayingControls() {
+        const s = PlaybackStore.get();
+        const btn = document.getElementById('mushafJumpPlaying');
+        if (btn) {
+            const show = !!s.page && s.status !== 'idle' && s.page !== this.currentPage;
+            btn.hidden = !show;
+            if (show) btn.querySelector('span').textContent = `صفحة التشغيل الحالية (${this.getArabicNumber(s.page)})`;
+        }
+    },
+
+    goToPlayingPage() {
+        const s = PlaybackStore.get();
+        if (s.page) this.loadPage(s.page);
     },
 
     /**
      * تحميل صفحة معينة
      */
-    loadPage(pageNumber) {
-        if (pageNumber < 1 || pageNumber > this.totalPages) return;
+    loadPage(pageNumber, opts) {
+        pageNumber = parseInt(pageNumber, 10);
+        if (!(pageNumber >= 1 && pageNumber <= this.totalPages)) return;
         
         this.currentPage = pageNumber;
         localStorage.setItem('mushaf_last_page', pageNumber);
+        PlaybackStore.setReading({ page: pageNumber });
         
-        this.displayPage(pageNumber);
+        this.displayPage(pageNumber, opts);
     },
 
     /**
      * عرض الصفحة
      */
-    async displayPage(pageNumber) {
+    async displayPage(pageNumber, opts) {
         const container = document.getElementById('mushafContent');
         if (!container) return;
 
-        App.showLoading();
+        const silent = !!(opts && opts.silent);   // automatic page turn: no blocking overlay
+        if (!silent) App.showLoading();
 
         try {
             // الحصول على معلومات الصفحة من API
-            const pageData = await APIService.getPage(pageNumber, 'ar.alafasy');
+            const pageData = await APIService.getPage(pageNumber, QuranDisplay.TEXT_EDITION);
             
             // تجهيز صور الصفحة من مصادر مختلفة
             const pageImageUrl = this.getPageImageUrl(pageNumber);
@@ -111,6 +150,24 @@ const DigitalMushaf = {
                         </div>
                     </div>
 
+                    <!-- التشغيل والمتابعة -->
+                    <div class="mushaf-playbar" role="group" aria-label="تشغيل الصفحة">
+                        <button class="btn btn-primary" onclick="AudioPlayer.playNow('page', ${pageNumber})">
+                            <i class="fas fa-play-circle" aria-hidden="true"></i> تشغيل هذه الصفحة
+                        </button>
+                        <button class="btn btn-secondary" onclick="AudioPlayer.addToQueue('page', ${pageNumber})">
+                            <i class="fas fa-list-ol" aria-hidden="true"></i> إلى الطابور
+                        </button>
+                        <button class="btn btn-secondary" id="mushafJumpPlaying" hidden onclick="DigitalMushaf.goToPlayingPage()">
+                            <i class="fas fa-location-crosshairs" aria-hidden="true"></i> <span></span>
+                        </button>
+                        <label class="follow-toggle">
+                            <input type="checkbox" ${PlayerState.prefs.followPlayback ? 'checked' : ''}
+                                   onchange="PlayerState.prefs.followPlayback = this.checked; PlayerState.persist();">
+                            تتبع التشغيل
+                        </label>
+                    </div>
+
                     <!-- عرض صفحة المصحف -->
                     <div class="mushaf-page-container" style="text-align: center; background: var(--color-bg-light); padding: 30px; border-radius: var(--radius-lg); min-height: 800px;">
                         <img src="${pageImageUrl}" 
@@ -125,7 +182,7 @@ const DigitalMushaf = {
                             <div class="card" style="max-width: 800px; margin: 0 auto;">
                                 ${pageData.ayahs.map(ayah => `
                                     <div class="arabic-text" style="font-size: var(--text-2xl); line-height: 2.5; margin-bottom: 20px;">
-                                        ${ayah.text} 
+                                        ${QuranUtil.esc(ayah.text)} 
                                         <span style="color: var(--color-accent); font-weight: 700;">﴿${ayah.numberInSurah}﴾</span>
                                     </div>
                                 `).join('')}
@@ -156,16 +213,18 @@ const DigitalMushaf = {
                 </div>
             `;
 
+            if (pageNumber !== this.currentPage) return;   // user already moved to another page
             container.innerHTML = html;
-            App.hideLoading();
+            if (!silent) App.hideLoading();
+            this.updatePlayingControls();
             
             // التمرير لأعلى الصفحة
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (!silent) window.scrollTo({ top: 0, behavior: 'smooth' });
 
         } catch (error) {
             console.error('Error loading Mushaf page:', error);
             App.showToast('حدث خطأ في تحميل الصفحة', 'error');
-            App.hideLoading();
+            if (!silent) App.hideLoading();
         }
     },
 
@@ -510,7 +569,7 @@ const DigitalMushaf = {
     async goToSurahPage(surahNumber) {
         try {
             // الحصول على الصفحة الأولى من السورة
-            const surahData = await APIService.getSurah(surahNumber, 'ar.alafasy');
+            const surahData = await APIService.getSurah(surahNumber, QuranDisplay.TEXT_EDITION);
             if (surahData && surahData.ayahs && surahData.ayahs[0]) {
                 const firstPage = surahData.ayahs[0].page;
                 this.loadPage(firstPage);
@@ -528,7 +587,7 @@ const DigitalMushaf = {
     async goToJuzPage(juzNumber) {
         try {
             // الحصول على الصفحة الأولى من الجزء
-            const juzData = await APIService.getJuz(juzNumber, 'ar.alafasy');
+            const juzData = await APIService.getJuz(juzNumber, QuranDisplay.TEXT_EDITION);
             if (juzData && juzData.ayahs && juzData.ayahs[0]) {
                 const firstPage = juzData.ayahs[0].page;
                 this.loadPage(firstPage);
@@ -600,9 +659,13 @@ const DigitalMushaf = {
      * إعداد التحكم بلوحة المفاتيح
      */
     setupKeyboardControls() {
+        if (this._kbBound) return;            // register once, not on every visit
+        this._kbBound = true;
         document.addEventListener('keydown', (e) => {
-            // التأكد من أن المستخدم في صفحة المصحف
-            if (!document.getElementById('mushafContent')) return;
+            // فقط داخل صفحة المصحف، وليس أثناء الكتابة أو استخدام عناصر التحكم
+            if (App.currentPage !== 'mushaf') return;
+            if (e.target.closest && e.target.closest('input, textarea, select, button, [role="slider"], .modal')) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) { if (!(e.ctrlKey && (e.key === 'f' || e.key === 'F'))) return; }
             
             switch(e.key) {
                 case 'ArrowLeft':

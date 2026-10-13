@@ -117,8 +117,13 @@ const App = {
             translationPosition: 'below'
         };
 
-        const savedSettings = localStorage.getItem('quran_settings');
-        this.settings = savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+        let saved = null;
+        try {
+            saved = JSON.parse(localStorage.getItem('quran_settings'));
+        } catch (e) {
+            console.warn('Saved settings unreadable, using defaults', e);
+        }
+        this.settings = Object.assign({}, defaultSettings, saved && typeof saved === 'object' ? saved : {});
     },
 
     /**
@@ -165,7 +170,7 @@ const App = {
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
-                const page = e.target.getAttribute('data-page');
+                const page = e.currentTarget.getAttribute('data-page');
                 this.navigateToPage(page);
             });
         });
@@ -236,6 +241,17 @@ const App = {
         if (typeof Bookmarks !== 'undefined') {
             Bookmarks.init();
         }
+
+        if (typeof PlaylistsUI !== 'undefined') {
+            PlaylistsUI.init();
+        }
+    },
+
+    /**
+     * Show the reader (Surah / Juz / page text) without touching playback.
+     */
+    showReader() {
+        this.navigateToPage('surah');
     },
 
     /**
@@ -263,9 +279,24 @@ const App = {
         });
 
         this.currentPage = pageName;
+        window.scrollTo({ top: 0 });
 
         // Load page content if needed
         switch (pageName) {
+            case 'surah':
+                // Re-entering the reader keeps what was open; only load something if nothing is open yet.
+                if (!QuranDisplay.currentSurah) {
+                    const last = Bookmarks.lastRead;
+                    if (last && last.surahNumber >= 1 && last.surahNumber <= 114) {
+                        QuranDisplay.loadSurah(last.surahNumber);
+                    } else {
+                        this.navigateToPage('home');
+                    }
+                }
+                break;
+            case 'playlists':
+                if (typeof PlaylistsUI !== 'undefined') PlaylistsUI.show();
+                break;
             case 'adhkar':
                 if (typeof Adhkar !== 'undefined') {
                     Adhkar.init();
@@ -317,12 +348,14 @@ const App = {
 
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
+        toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
         toast.innerHTML = `
             <div class="flex items-center gap-4">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
-                <span>${message}</span>
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}" aria-hidden="true"></i>
+                <span></span>
             </div>
         `;
+        toast.querySelector('span').textContent = message;
 
         container.appendChild(toast);
 
@@ -339,6 +372,7 @@ const App = {
      * Format time in MM:SS format
      */
     formatTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) seconds = 0;
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
         return `${mins}:${secs.toString().padStart(2, '0')}`;

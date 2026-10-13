@@ -20,12 +20,13 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
         rel="stylesheet">
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="adhkar-mushaf-styles.css">
+    <link rel="stylesheet" href="player-styles.css">
 
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -60,7 +61,9 @@
                 </div>
                 <ul class="nav-links">
                     <li><a class="nav-link active" data-page="home">الرئيسية</a></li>
+                    <li><a class="nav-link" data-page="surah">القراءة</a></li>
                     <li><a class="nav-link" data-page="mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" data-page="playlists">القوائم</a></li>
                     <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
                     <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
                     <li><a class="nav-link" data-page="resources">المصادر</a></li>
@@ -106,10 +109,30 @@
                         <i class="fas fa-arrow-right"></i>
                         العودة
                     </button>
+                    <button class="btn btn-secondary" id="jumpToPlayingBtn" hidden>
+                        <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
+                        العودة للآية الجارية
+                    </button>
+                    <label class="follow-toggle">
+                        <input type="checkbox" id="followPlaybackToggle"> تتبع التشغيل
+                    </label>
                 </div>
 
                 <div id="surahContent">
                     <!-- Surah content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Playlists & Queue Page -->
+            <div id="playlistsPage" class="page hidden">
+                <div class="page-header">
+                    <h2><i class="fas fa-list-ul" aria-hidden="true"></i> قوائم التشغيل والطابور</h2>
+                </div>
+                <div id="playlistsContent" class="pl-layout">
+                    <section id="npSection" class="pl-card" aria-labelledby="npHeading"></section>
+                    <section id="qSection" class="pl-card" aria-labelledby="qHeading"></section>
+                    <section id="plSection" class="pl-card" aria-labelledby="plHeading"></section>
+                    <section id="pickerSection" class="pl-card" aria-labelledby="pickerHeading"></section>
                 </div>
             </div>
 
@@ -200,47 +223,47 @@
 
     <!-- Audio Player (Sticky Bottom) -->
     <div id="audioPlayerContainer" class="hidden">
-        <div class="audio-player">
-            <div class="audio-info mb-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-sm" style="color: var(--color-text-light);">يقرأ الآن</div>
-                        <div class="arabic-text" style="font-size: var(--text-lg);" id="currentAyahText">
-                            <!-- Current ayah text -->
-                        </div>
+        <div class="audio-player" role="region" aria-label="مشغّل الصوت">
+            <div class="audio-info">
+                <div class="audio-info-main">
+                    <div class="audio-now">
+                        <span class="audio-now-label">يقرأ الآن</span>
+                        <span id="nowTitle" class="audio-now-title"></span>
+                        <span id="nextUp" class="audio-next-up"></span>
                     </div>
-                    <div class="text-sm" style="color: var(--color-text-gray);">
-                        <span id="currentReciter">عبد الباسط عبد الصمد</span>
-                    </div>
+                    <div class="arabic-text audio-ayah" id="currentAyahText" lang="ar" dir="rtl"></div>
+                </div>
+                <div class="audio-meta">
+                    <span id="currentReciter">مشاري راشد العفاسي</span>
+                    <span id="playerStatus" class="player-status" role="status" aria-live="polite"></span>
                 </div>
             </div>
 
-            <div class="audio-progress" id="audioProgress">
+            <div class="audio-progress" id="audioProgress" role="slider" tabindex="0" aria-label="موضع التشغيل"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                 <div class="audio-progress-bar" id="audioProgressBar"></div>
             </div>
 
             <div class="audio-controls">
-                <button class="audio-btn" id="prevBtn" title="السابق">
-                    <i class="fas fa-backward"></i>
+                <button class="audio-btn" id="shuffleBtn" title="تشغيل عشوائي" aria-label="تشغيل عشوائي" aria-pressed="false">
+                    <i class="fas fa-shuffle" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="prevBtn" title="السابق" aria-label="العنصر السابق">
+                    <i class="fas fa-backward-step" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn play-btn" id="playPauseBtn" title="تشغيل" aria-label="تشغيل">
+                    <i class="fas fa-play" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="nextBtn" title="التالي" aria-label="العنصر التالي">
+                    <i class="fas fa-forward-step" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="repeatBtn" title="التكرار متوقف" aria-label="التكرار متوقف">
+                    <i class="fas fa-repeat" aria-hidden="true"></i>
+                    <span id="repeatCountDisplay" class="repeat-badge"></span>
                 </button>
 
-                <button class="audio-btn play-btn" id="playPauseBtn" title="تشغيل">
-                    <i class="fas fa-play"></i>
-                </button>
-
-                <button class="audio-btn" id="nextBtn" title="التالي">
-                    <i class="fas fa-forward"></i>
-                </button>
-
-                <button class="audio-btn" id="repeatBtn" title="تكرار">
-                    <i class="fas fa-repeat"></i>
-                    <span id="repeatCountDisplay"
-                        style="position: absolute; top: -8px; right: -8px; font-size: 10px; font-weight: bold;"></span>
-                </button>
-
-                <select id="repeatCountSelect"
-                    style="padding: 8px; border-radius: var(--radius-md); border: 2px solid var(--color-border); background: var(--color-bg-white); color: var(--color-text-dark); margin-right: 8px;">
-                    <option value="1">1×</option>
+                <select id="repeatCountSelect" class="repeat-select" aria-label="عدد مرات تكرار السورة">
+                    <option value="0">∞</option>
                     <option value="2">2×</option>
                     <option value="3">3×</option>
                     <option value="5">5×</option>
@@ -248,16 +271,25 @@
                     <option value="10">10×</option>
                 </select>
 
-                <div class="flex-1 flex items-center gap-4" style="margin-right: var(--space-4);">
-                    <i class="fas fa-volume-up" style="color: var(--color-text-gray);"></i>
-                    <input type="range" min="0" max="100" value="80" id="volumeSlider" style="flex: 1;">
+                <div class="audio-time-volume">
+                    <i class="fas fa-volume-up" aria-hidden="true"></i>
+                    <input type="range" min="0" max="100" value="80" id="volumeSlider" aria-label="مستوى الصوت">
                     <span id="currentTime">0:00</span>
                     <span>/</span>
                     <span id="duration">0:00</span>
                 </div>
 
-                <button class="audio-btn" id="reciterBtn" title="اختيار القارئ">
-                    <i class="fas fa-microphone"></i>
+                <button class="audio-btn" id="locateBtn" title="عرض في القارئ" aria-label="عرض الآية الجارية في القارئ">
+                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="addToPlaylistBtn" title="إضافة السورة إلى قائمة التشغيل" aria-label="إضافة السورة الحالية إلى قائمة التشغيل">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="queueBtn" title="الطابور وقوائم التشغيل" aria-label="فتح الطابور وقوائم التشغيل">
+                    <i class="fas fa-list-ul" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="reciterBtn" title="اختيار القارئ" aria-label="اختيار القارئ">
+                    <i class="fas fa-microphone" aria-hidden="true"></i>
                 </button>
             </div>
         </div>
@@ -281,12 +313,12 @@
     </div>
 
     <!-- Reciter Selection Modal -->
-    <div id="reciterModal" class="modal">
+    <div id="reciterModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reciterTitle">
         <div class="modal-backdrop" id="reciterBackdrop"></div>
         <div class="modal-content">
             <div class="flex items-center justify-between mb-4">
-                <h3>اختيار القارئ</h3>
-                <button class="btn-icon" id="closeReciterModal">
+                <h3 id="reciterTitle">اختيار القارئ</h3>
+                <button class="btn-icon" id="closeReciterModal" aria-label="إغلاق">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -310,6 +342,9 @@
     <script src="api-service.js"></script>
     <script src="app.js"></script>
     <script src="quran-display.js"></script>
+    <script src="play-queue.js"></script>
+    <script src="playlists.js"></script>
+    <script src="playback-store.js"></script>
     <script src="audio-player.js"></script>
     <script src="tafseer.js"></script>
     <script src="translation.js"></script>
@@ -319,6 +354,7 @@
     <script src="islamic-resources.js"></script>
     <script src="adhkar.js"></script>
     <script src="digital-mushaf.js"></script>
+    <script src="playlists-ui.js"></script>
 </body>
 
 </html>
