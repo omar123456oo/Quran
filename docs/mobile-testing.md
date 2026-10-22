@@ -11,25 +11,33 @@ Date: 2026-10-22. Status of every test category run or attempted during the migr
 | Android Gradle build | `./gradlew assembleDebug` | **BUILD SUCCESSFUL** — verified artifact at `android/app/build/outputs/apk/debug/app-debug.apk` (4.3MB), contents checked with `unzip -l` for `classes.dex`, `AndroidManifest.xml`, and the web assets including `capacitor-bootstrap.js` |
 | iOS build | — | **Not attempted** — this is a Linux machine; no Xcode/macOS available. See `docs/mobile-build-and-release.md` for the documented path. |
 
-## Manual / runtime tests
+## Manual / runtime tests — run on a real emulator
 
-**Not run** — no Android emulator or physical device was available in this environment (`adb devices` returned empty, no AVD configured). The machine does have working hardware virtualization (`/dev/kvm` present, CPU reports `vmx`/`svm`), so a hardware-accelerated emulator is a viable next step if the user wants one set up — not done here since it requires another non-trivial system-image download that wasn't part of the original toolchain approval.
+An Android emulator was set up after the initial build pass (API 34, `google_apis` x86_64 image, AVD name `qurankareem`, hardware-accelerated via this machine's working KVM). The debug APK was installed (`adb install -r`) and driven via `adb shell input`/`screencap`, with results read from actual screenshots and `adb logcat`, not assumed:
 
-The Review Focus items below (from `docs/mobile-migration-plan.md`) are the manual test matrix for whoever next runs this on a device/emulator:
-
-| Item | How to test | Status |
+| Item | How it was tested | Result |
 |---|---|---|
-| Hardware back button navigates the SPA's page stack, not exit-on-first-press | Open any non-home page, press the Android back gesture/button, confirm it returns to Home; press again on Home, confirm the app exits | **Blocked** — no device/emulator |
-| Outbound resource links (8 sites in "المصادر") open in the system browser | Tap a resource link, confirm Chrome/system browser opens (not an in-app WebView with no way back) | **Blocked** — no device/emulator |
-| Offline / API-failure feedback | Toggle airplane mode while the app is open; confirm the "لا يوجد اتصال بالإنترنت" toast appears, and a success toast on reconnect; confirm a failed API call also surfaces a toast | **Blocked** — no device/emulator |
-| Audio survives/recovers from interruption (phone call, another app) | Start playback, trigger an interrupting call/notification, confirm playback state doesn't get stuck | **Blocked** — no device/emulator |
-| Status bar / notch overlap | Visually inspect the header and sticky audio player on an edge-to-edge device/emulator | **Blocked** — no device/emulator (verified only via browser responsive-mode approximation, which has no real status bar to check against) |
+| Hardware back button navigates the SPA's page stack, not exit-on-first-press | Opened Al-Faatiha (non-home page), pressed `KEYCODE_BACK`, screenshotted — landed back on Home. Pressed `KEYCODE_BACK` again — `dumpsys activity` showed `mFocusedApp` switch to the launcher, confirming the app exited | **PASS** |
+| Outbound resource links (8 sites in "المصادر") open in the system browser | Tapped "زيارة الموقع" on the Quran.com resource card; `dumpsys activity` showed `mFocusedApp` become `com.android.chrome`, and `logcat` showed `Browser.open` called with `url: https://quran.com/` | **PASS** |
+| Offline / API-failure feedback | `adb shell svc wifi disable && adb shell svc data disable` while the app was open — red "لا يوجد اتصال بالإنترنت" toast appeared (screenshot captured); re-enabled both — green "تم استعادة الاتصال بالإنترنت" toast appeared | **PASS** |
+| Status bar / notch overlap | Visual inspection of the header and sticky audio player across 6 screenshots at different app states — no overlap with the status bar or system UI | **PASS** (this emulator profile has no physical notch to test against; `env(safe-area-inset-*)` behavior on a real notched device is still unverified) |
+| Audio actually plays | Not an original Review Focus item, tested anyway since it's the app's core feature: tapped "تشغيل السورة كاملة" on Al-Faatiha — the sticky player showed the live reciter name (مشاري راشد العفاسي), ayah counter (١/٧), an advancing timer, and a pause icon, confirming real HTTPS audio streaming from the API works inside the Capacitor WebView | **PASS** |
+| Audio survives/recovers from interruption (phone call, another app) | Not tested — would need a second app/call simulated mid-playback on the emulator, not done in this pass | **Not tested** |
+
+### One real finding from `adb logcat`
+
+Twice at every cold app launch, Capacitor's own native-bridge-injected script (not `capacitor-bootstrap.js` or any other app file — confirmed by grepping the repo for the error's text) throws and logs:
+```
+E Capacitor/Console: File:  - Line 6 - Msg: Error injecting safe area CSS: TypeError: Cannot read properties of null (reading 'style')
+```
+This is Capacitor 8.5.3's own built-in safe-area-inset CSS injection (separate from the `env(safe-area-inset-*)` rules this migration added manually to `styles.css`) running before `document.documentElement` exists yet. It did not block rendering, did not appear in any functional test above, and the app's own safe-area CSS (confirmed visually, see the status-bar-overlap row above) was unaffected — logged here as an observed, non-blocking upstream Capacitor behavior, not fixed, since fixing it would mean patching `node_modules`.
 
 ## Explicit not-tested list
 
 - iOS runtime behavior of any kind (no Mac in this environment).
-- Any of the 5 manual Review Focus items above (no Android device/emulator).
+- Audio interruption recovery (phone call / other app mid-playback).
+- Real notched-device safe-area rendering (this AVD profile has no notch).
 - `tests/browser/*.js` CDP smoke suite (no Chromium binary).
-- Real-device audio background/lock-screen behavior (requires a device, separate from the interruption test above).
+- Playlists, queue, bookmarks, Adhkar, digital Mushaf, search, and settings pages — only the back-button/external-link/offline/audio paths above were exercised on-device; the rest rely on the unit test suite and the unchanged source code.
 
-No test result in this document or elsewhere in the migration docs is asserted without the command/output that produced it.
+No test result in this document or elsewhere in the migration docs is asserted without the command/output or screenshot that produced it.

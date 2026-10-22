@@ -49,12 +49,23 @@ cd android
 
 Output: `android/app/build/outputs/apk/debug/app-debug.apk`. Install on a connected device/emulator with `adb install -r android/app/build/outputs/apk/debug/app-debug.apk`.
 
-**No emulator/device was available in this environment** (`adb devices` returned empty). The machine does have working KVM (`/dev/kvm` present, CPU virtualization flags present), so a hardware-accelerated emulator is realistic to add later:
+**An emulator is now set up and was used to verify the build**: AVD `qurankareem` (API 34, `google_apis` x86_64, `pixel_6` device profile), hardware-accelerated via this machine's KVM. It was left running headless after verification. To relaunch it in a future session:
+
+```bash
+source ~/android-toolchain/env.sh
+nohup ~/Android/Sdk/emulator/emulator -avd qurankareem -no-window -no-audio -no-boot-anim > ~/android-toolchain/emulator.log 2>&1 &
+disown
+adb wait-for-device
+adb shell getprop sys.boot_completed   # poll until this prints 1
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb shell am start -n com.example.qurankareem/.MainActivity
+```
+
+To create it from scratch elsewhere:
 
 ```bash
 sdkmanager --sdk_root="$HOME/Android/Sdk" "system-images;android-34;google_apis;x86_64" "emulator"
-avdmanager create avd -n qurankareem -k "system-images;android-34;google_apis;x86_64"
-emulator -avd qurankareem
+avdmanager create avd -n qurankareem -k "system-images;android-34;google_apis;x86_64" --device "pixel_6"
 ```
 
 ## Android release build (not yet done — needs a real signing key)

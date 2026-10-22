@@ -17,7 +17,7 @@ npm run test:browser # CDP-driven browser smoke tests (requires a local Chrome/C
 
 ## Mobile (Android/iOS)
 
-The app is wrapped for Android and iOS with [Capacitor](https://capacitorjs.com/), without rewriting any of the web app above — see `docs/mobile-architecture.md` for how it fits together, `docs/mobile-testing.md` for what's been verified, and `docs/mobile-build-and-release.md` for every build/release command and the known environment limitations (no iOS build on Linux, no emulator configured here, release signing not yet set up).
+The app is wrapped for Android and iOS with [Capacitor](https://capacitorjs.com/), without rewriting any of the web app above — see `docs/mobile-architecture.md` for how it fits together, `docs/mobile-testing.md` for what's been verified (including on-device emulator testing), and `docs/mobile-build-and-release.md` for every build/release command and the known environment limitations (no iOS build on Linux, release signing not yet set up).
 
 Quick start:
 
