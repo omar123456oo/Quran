@@ -2,5 +2,10 @@
   "appId": "com.example.qurankareem",
   "appName": "Qur'an Kareem",
   "webDir": "www",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
 }

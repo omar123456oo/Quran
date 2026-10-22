@@ -40,6 +40,9 @@ const APIService = {
             return data.data;
         } catch (error) {
             console.error(`API Error for ${endpoint}:`, error);
+            if (window.App && typeof window.App.showToast === 'function') {
+                window.App.showToast('تعذر الاتصال بالخادم. حاول مرة أخرى', 'error');
+            }
             throw error;
         }
     },
