@@ -58,6 +58,7 @@ Sticky bottom audio player (`audioPlayerContainer`) persists across all pages, p
 - No API keys, tokens, secrets, or credentials found anywhere in the client code (expected — the Al Quran Cloud API requires none).
 - No `eval(`, no dynamic `<script>` injection, no `innerHTML` assignment of unsanitized remote content was specifically checked yet in depth for XSS during the audit pass (API responses are inserted into the DOM for Quran/tafseer text) — called out as a security-review item in the plan, not confirmed broken, just not yet verified safe.
 - `rel="noopener noreferrer"` is already correctly set on the one place external links render (`islamic-resources.js`) — good existing practice.
+- **Post-Capacitor-install note:** `npm audit` reports 3 moderate findings, all in `uuid` → `xcode` → `@capacitor/cli` — a build-time-only tool dependency (generates Xcode project files) never shipped inside the app bundle (web or native). Not fixed via `npm audit fix --force` because that would force-downgrade `@capacitor/cli` below the installed platform packages' version, a riskier change than the low-severity, build-tooling-only issue it fixes.
 
 ## 7. Pre-existing defects noted (not migration-caused)
 
