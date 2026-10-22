@@ -7,6 +7,9 @@
  *
  * Audio source: the API publishes one MP3 per ayah, so every queue item (Surah / page / Juz)
  * is played as a sequence of ayah files. Verse-level sync is therefore exact — no timing is estimated.
+ * A few reciters (flagged `surahOnly` below) only publish one MP3 per Surah; for those,
+ * resolveAyahs() falls back to a single whole-Surah track and per-ayah sync/highlighting
+ * and page/Juz playback are unavailable.
  */
 
 const AudioPlayer = {
@@ -34,7 +37,8 @@ const AudioPlayer = {
         { id: 'ar.saadalghamadi', name: 'سعد الغامدي', nameEn: 'Saad Al-Ghamadi' },
         { id: 'ar.shaatree', name: 'أبو بكر الشاطري', nameEn: 'Abu Bakr Al-Shatri' },
         { id: 'ar.abdurrahmaansudais', name: 'عبد الرحمن السديس', nameEn: 'Abdurrahman As-Sudais' },
-        { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي', nameEn: 'Maher Al-Muaiqly' }
+        { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي', nameEn: 'Maher Al-Muaiqly' },
+        { id: 'ar.mahmoudalialbanna', name: 'محمود علي البنا', nameEn: 'Mahmoud Ali Al-Banna', surahOnly: true }
     ],
 
     get queue() { return PlayerState.queue; },
@@ -167,6 +171,9 @@ const AudioPlayer = {
     /* ------------------------------------------------------ loading */
     /** Fetch the ayahs of a queue item for a reciter. Only keeps entries with a valid https audio URL. */
     async resolveAyahs(item, reciter) {
+        const meta = this.reciters.find(r => r.id === reciter);
+        if (meta && meta.surahOnly) return this.resolveSurahOnlyTrack(item, reciter);
+
         let data;
         if (item.kind === 'surah') data = await APIService.getSurah(item.ref, reciter);
         else if (item.kind === 'page') data = await APIService.getPage(item.ref, reciter);
@@ -182,6 +189,28 @@ const AudioPlayer = {
                 juz: a.juz
             }))
             .filter(a => a.audio && Number.isInteger(a.surah) && Number.isInteger(a.numberInSurah));
+    },
+
+    /**
+     * Reciters with one MP3 per Surah have no page/Juz audio at all, and no per-ayah seek
+     * target within a Surah — so this returns at most one pseudo-"ayah" covering the whole
+     * Surah, or an empty list (handled upstream as "unavailable") for page/Juz items.
+     */
+    async resolveSurahOnlyTrack(item, reciter) {
+        if (item.kind !== 'surah') return [];
+        const data = await APIService.getSurah(item.ref, reciter);
+        if (!data || !Array.isArray(data.ayahs) || typeof data.audio !== 'string' || !/^https:\/\//.test(data.audio)) {
+            return [];
+        }
+        return [{
+            surah: data.number,
+            numberInSurah: 1,
+            text: data.ayahs.map(a => a.text).filter(t => typeof t === 'string').join(' '),
+            audio: data.audio,
+            page: data.ayahs[0] && data.ayahs[0].page,
+            juz: data.ayahs[0] && data.ayahs[0].juz,
+            wholeSurah: true
+        }];
     },
 
     /** Load and start the queue's current item. */
@@ -239,7 +268,8 @@ const AudioPlayer = {
         this.audio.src = a.audio;
         PlaybackStore.set({
             status: autoplay ? 'loading' : 'paused',
-            surah: a.surah, ayah: a.numberInSurah, ayahIndex: i, ayahCount: this.ayahs.length,
+            surah: a.surah, ayah: a.wholeSurah ? null : a.numberInSurah,
+            ayahIndex: i, ayahCount: a.wholeSurah ? 0 : this.ayahs.length,
             page: a.page, juz: a.juz, ayahText: a.text, audioSrc: a.audio,
             time: seek || 0, duration: 0, message: ''
         });
