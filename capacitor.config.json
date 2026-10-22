@@ -1,0 +1,6 @@
+{
+  "appId": "com.example.qurankareem",
+  "appName": "Qur'an Kareem",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
