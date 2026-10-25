@@ -3,7 +3,13 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1e7b5f">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
     <meta name="description"
         content="Qur'an Kareem - Complete Holy Qur'an with Audio Recitations, Tafseer, Translations and Islamic Resources">
     <meta name="keywords" content="Quran, Qur'an, Islam, Tafseer, Recitation, Audio, Translation">
@@ -21,15 +27,16 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
-        rel="stylesheet">
+        rel="stylesheet" crossorigin="anonymous">
 
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="adhkar-mushaf-styles.css">
     <link rel="stylesheet" href="player-styles.css">
+    <link rel="stylesheet" href="offline-reader.css">
 
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
 </head>
 
 <body>
@@ -66,6 +73,7 @@
                     <li><a class="nav-link" data-page="playlists">القوائم</a></li>
                     <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
                     <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
+                    <li><a class="nav-link" data-page="downloads">التنزيلات</a></li>
                     <li><a class="nav-link" data-page="resources">المصادر</a></li>
                     <li><a class="nav-link" data-page="settings">الإعدادات</a></li>
                 </ul>
@@ -76,6 +84,13 @@
             </nav>
         </div>
     </header>
+
+    <!-- Connectivity banner -->
+    <div id="offlineBanner" class="offline-banner" role="status" aria-live="polite" hidden>
+        <i class="fas fa-plane" aria-hidden="true"></i>
+        <span>أنت غير متصل بالإنترنت — يمكنك قراءة صفحات المصحف والاستماع إلى السور المحمّلة.</span>
+        <a href="#" data-page-link="downloads">التنزيلات</a>
+    </div>
 
     <!-- Mobile Menu Backdrop -->
     <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
@@ -146,6 +161,15 @@
                 </div>
             </div>
 
+            <!-- Downloads Page -->
+            <div id="downloadsPage" class="page hidden">
+                <div class="page-header">
+                    <h2><i class="fas fa-download" aria-hidden="true"></i> التنزيلات والقراءة دون اتصال</h2>
+                    <p>نزّل السور والصفحات لتستمع وتقرأ دون إنترنت</p>
+                </div>
+                <div id="downloadsContent" class="dl-layout"></div>
+            </div>
+
             <!-- Resources Page -->
             <div id="resourcesPage" class="page hidden">
                 <div class="page-header">
@@ -159,10 +183,7 @@
 
             <!-- Digital Mushaf Page -->
             <div id="mushafPage" class="page hidden">
-                <div class="page-header">
-                    <h2><i class="fas fa-book-quran"></i> المصحف القارئ الإلكتروني</h2>
-                    <p>تصفح المصحف الشريف بصورة عالية الجودة</p>
-                </div>
+                <h2 class="sr-only">المصحف القارئ الإلكتروني</h2>
                 <div id="mushafContent">
                     <!-- Mushaf content will be loaded here -->
                 </div>
@@ -339,6 +360,10 @@
     </div>
 
     <!-- Scripts -->
+    <script src="mushaf-meta.js"></script>
+    <script src="offline-db.js"></script>
+    <script src="offline-audio.js"></script>
+    <script src="mushaf-store.js"></script>
     <script src="api-service.js"></script>
     <script src="app.js"></script>
     <script src="quran-display.js"></script>
@@ -355,6 +380,7 @@
     <script src="adhkar.js"></script>
     <script src="digital-mushaf.js"></script>
     <script src="playlists-ui.js"></script>
+    <script src="downloads-ui.js"></script>
 </body>
 
 </html>

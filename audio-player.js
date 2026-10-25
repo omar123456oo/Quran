@@ -169,8 +169,16 @@ const AudioPlayer = {
     },
 
     /* ------------------------------------------------------ loading */
-    /** Fetch the ayahs of a queue item for a reciter. Only keeps entries with a valid https audio URL. */
+    /**
+     * Ayahs of a queue item for a reciter. A verified offline copy is used when one exists
+     * (no network needed); otherwise the API list, keeping only entries with an https URL.
+     */
     async resolveAyahs(item, reciter) {
+        if (typeof OfflineAudio !== 'undefined') {
+            await OfflineAudio.init();
+            const local = OfflineAudio.localAyahs(item, reciter);
+            if (local && local.length) return local;
+        }
         const meta = this.reciters.find(r => r.id === reciter);
         if (meta && meta.surahOnly) return this.resolveSurahOnlyTrack(item, reciter);
 
@@ -262,25 +270,48 @@ const AudioPlayer = {
         if (!a) return;
         this.ayahIndex = i;
         this.ayahSerial += 1;
+        const serial = this.ayahSerial;
         this.retried = false;
         this.switching = true;
         this.pendingSeek = seek > 0 ? seek : null;
-        this.audio.src = a.audio;
         PlaybackStore.set({
             status: autoplay ? 'loading' : 'paused',
             surah: a.surah, ayah: a.wholeSurah ? null : a.numberInSurah,
             ayahIndex: i, ayahCount: a.wholeSurah ? 0 : this.ayahs.length,
-            page: a.page, juz: a.juz, ayahText: a.text, audioSrc: a.audio,
-            time: seek || 0, duration: 0, message: ''
+            page: a.page, juz: a.juz, ayahText: a.text, audioSrc: a.audio || a.localKey,
+            time: seek || 0, duration: 0, message: '', local: !!a.localKey
         });
-        if (autoplay) this.safePlay();
-        this.preloadNext();
+        const start = (src, objectUrl) => {
+            if (serial !== this.ayahSerial) { if (objectUrl) URL.revokeObjectURL(src); return; }   // superseded
+            this.releaseObjectUrl();
+            if (objectUrl) this.objectUrl = src;
+            this.audio.src = src;
+            if (autoplay) this.safePlay();
+            this.preloadNext();
+        };
+        if (a.localKey) {
+            OfflineAudio.objectUrl(a.localKey).then((url) => {
+                if (url) return start(url, true);
+                // The stored file vanished (browser storage eviction): stream it when online.
+                if (navigator.onLine !== false) return start(a.localKey, false);
+                if (serial !== this.ayahSerial) return;
+                const message = 'ملف هذه الآية لم يعد محفوظًا على الجهاز. أعد تنزيل السورة';
+                PlaybackStore.set({ status: 'error', message });
+                App.showToast(message, 'error');
+            }).catch(() => start(a.localKey, false));
+        } else {
+            start(a.audio, false);
+        }
         this.saveResume(true);
+    },
+
+    releaseObjectUrl() {
+        if (this.objectUrl) { URL.revokeObjectURL(this.objectUrl); this.objectUrl = null; }
     },
 
     preloadNext() {
         const n = this.ayahs[this.ayahIndex + 1];
-        if (n) this.nextAudio.src = n.audio;
+        if (n && n.audio) this.nextAudio.src = n.audio;      // local files need no preloading
     },
 
     safePlay() {
@@ -303,6 +334,7 @@ const AudioPlayer = {
         this.audio.pause();
         this.audio.removeAttribute('src');
         this.audio.load();
+        this.releaseObjectUrl();
     },
 
     /* ------------------------------------------------ end of ayah/item */
@@ -355,7 +387,9 @@ const AudioPlayer = {
         this.failures += 1;
         const name = PlayerState.label(item.kind, item.ref);
         const message = reason === 'network'
-            ? `تعذر تحميل الصوت لـ ${name}. تحقق من الاتصال`
+            ? (navigator.onLine === false
+                ? `${name} غير محمّلة للاستماع دون اتصال بهذا القارئ`
+                : `تعذر تحميل الصوت لـ ${name}. تحقق من الاتصال`)
             : `لا يوجد تسجيل متاح لـ ${name} بصوت هذا القارئ`;
         App.showToast(message, 'error');
 
@@ -730,6 +764,15 @@ const AudioPlayer = {
     hideReciterModal() {
         const modal = document.getElementById('reciterModal');
         if (modal) modal.classList.remove('active');
+    },
+
+    /** Use a reciter without checking availability (e.g. to play a Surah downloaded with it). */
+    setReciter(reciterId) {
+        if (reciterId === this.currentReciter || !this.reciters.some(r => r.id === reciterId)) return;
+        this.currentReciter = reciterId;
+        App.settings.defaultReciter = reciterId;
+        try { localStorage.setItem('quran_settings', JSON.stringify(App.settings)); } catch (e) { /* not critical */ }
+        PlaybackStore.set({ reciter: reciterId });
     },
 
     /**

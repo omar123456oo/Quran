@@ -34,7 +34,33 @@ const App = {
             Search.init();
         }
 
+        this.setupConnectivity();
+        this.registerServiceWorker();
+
         console.log('Application initialized successfully');
+    },
+
+    /** Offline banner; content that is stored on the device keeps working. */
+    setupConnectivity() {
+        const banner = document.getElementById('offlineBanner');
+        const update = () => {
+            const offline = navigator.onLine === false;
+            if (banner) banner.hidden = !offline;
+            document.body.classList.toggle('is-offline', offline);
+        };
+        window.addEventListener('online', update);
+        window.addEventListener('offline', update);
+        if (banner) banner.addEventListener('click', (e) => {
+            const link = e.target.closest('[data-page-link]');
+            if (link) { e.preventDefault(); this.navigateToPage(link.dataset.pageLink); }
+        });
+        update();
+    },
+
+    /** Service workers need a secure context: HTTPS in production, or localhost in development. */
+    registerServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+        navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service worker registration failed', e));
     },
 
     /**
@@ -245,6 +271,10 @@ const App = {
         if (typeof PlaylistsUI !== 'undefined') {
             PlaylistsUI.init();
         }
+
+        if (typeof Downloads !== 'undefined') {
+            Downloads.init();
+        }
     },
 
     /**
@@ -258,6 +288,12 @@ const App = {
      * Navigate to a page
      */
     navigateToPage(pageName) {
+        if (pageName !== 'mushaf') {
+            document.body.classList.remove('mr-focus');
+            if (this.baseTitle) document.title = this.baseTitle;
+        }
+        if (!this.baseTitle) this.baseTitle = document.title;
+
         // Hide all pages
         const pages = document.querySelectorAll('.page');
         pages.forEach(page => page.classList.add('hidden'));
@@ -309,6 +345,9 @@ const App = {
                 break;
             case 'bookmarks':
                 Bookmarks.loadBookmarks();
+                break;
+            case 'downloads':
+                if (typeof Downloads !== 'undefined') Downloads.show();
                 break;
             case 'resources':
                 IslamicResources.loadResources();
