@@ -24,13 +24,20 @@ async function launch({ width = 1280, height = 900, port = 9333, profile = null,
     else if (d.method === 'Runtime.consoleAPICalled') logs.push(`[${d.params.type}] ` + d.params.args.map(a => a.value ?? a.description).join(' '));
     else if (d.method === 'Runtime.exceptionThrown') logs.push('[EXC] ' + (d.params.exceptionDetails.exception?.description || d.params.exceptionDetails.text));
   });
-  const send = (method, params = {}) => new Promise(r => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
+  // A reply can be lost when the page reloads mid-call (e.g. a service worker update); time out
+  // instead of hanging so waitFor() simply retries.
+  const send = (method, params = {}, ms = 60000) => new Promise((r, reject) => {
+    const i = ++id;
+    const t = setTimeout(() => { pending.delete(i); reject(new Error(`CDP ${method} timed out`)); }, ms);
+    pending.set(i, (d) => { clearTimeout(t); r(d); });
+    ws.send(JSON.stringify({ id: i, method, params }));
+  });
   await send('Runtime.enable'); await send('Page.enable');
   await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: width < 700 });
-  const ev = async (expr) => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }); if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval failed'); return r.result.result.value; };
+  const ev = async (expr, ms = 60000) => { const r = await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true }, ms); if (r.result.exceptionDetails) throw new Error(r.result.exceptionDetails.exception?.description || 'eval failed'); return r.result.result.value; };
   const goto = async (url) => { await send('Page.navigate', { url }); await sleep(800); };
   const shot = async (file) => { const r = await send('Page.captureScreenshot', { format: 'png' }); require('fs').writeFileSync(file, Buffer.from(r.result.data, 'base64')); };
-  const waitFor = async (expr, ms = 15000) => { const t = Date.now(); while (Date.now() - t < ms) { try { if (await ev(expr)) return true; } catch (e) {} await sleep(250); } return false; };
+  const waitFor = async (expr, ms = 15000) => { const t = Date.now(); while (Date.now() - t < ms) { try { if (await ev(expr, 5000)) return true; } catch (e) {} await sleep(250); } return false; };
   const close = () => { try { ws.close(); } catch (e) {} chrome.kill(); };
   // Graceful shutdown (Browser.close) so localStorage/IndexedDB are flushed to the profile,
   // as on a normal browser exit; falls back to killing the process.

@@ -84,7 +84,7 @@ const AudioPlayer = {
         on('repeatBtn', 'click', () => this.cycleRepeat());
         on('repeatCountSelect', 'change', (e) => this.setRepeatCount(e.target.value));
         on('volumeSlider', 'input', (e) => this.setVolume(e.target.value / 100));
-        on('reciterBtn', 'click', () => this.showReciterModal());
+        on('reciterBtn', 'click', (e) => this.showReciterModal(e.currentTarget));
         on('closeReciterModal', 'click', () => this.hideReciterModal());
         on('reciterBackdrop', 'click', () => this.hideReciterModal());
         on('queueBtn', 'click', () => App.navigateToPage('playlists'));
@@ -784,7 +784,7 @@ const AudioPlayer = {
     },
 
     /* ----------------------------------------------------------- reciter */
-    showReciterModal() {
+    showReciterModal(opener) {
         const modal = document.getElementById('reciterModal');
         const list = document.getElementById('reciterList');
         if (!modal || !list) return;
@@ -804,14 +804,20 @@ const AudioPlayer = {
             item.addEventListener('click', () => this.selectReciter(reciter.id, reciter.name));
             list.appendChild(item);
         });
+        this.reciterOpener = opener || document.activeElement;
         modal.classList.add('active');
-        const first = list.querySelector('button');
-        if (first) first.focus();
+        const focus = list.querySelector('[aria-pressed="true"]') || list.querySelector('button');
+        if (focus) focus.focus();
     },
 
     hideReciterModal() {
         const modal = document.getElementById('reciterModal');
-        if (modal) modal.classList.remove('active');
+        if (!modal || !modal.classList.contains('active')) return;
+        modal.classList.remove('active');
+        // Back to whatever opened the list (e.g. the mic button in the expanded player).
+        const back = this.reciterOpener;
+        this.reciterOpener = null;
+        if (back && back.isConnected && back.offsetParent !== null) back.focus();
     },
 
     /** Use a reciter without checking availability (e.g. to play a Surah downloaded with it). */

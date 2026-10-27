@@ -39,8 +39,14 @@ const PlayerViews = {
                     <button type="button" class="pv-icon" data-pv="minimize" aria-label="تصغير المشغل" title="تصغير">
                         <i class="fas fa-chevron-down" aria-hidden="true"></i></button>
                 </div>
+                <div class="pv-art" id="pvArt" aria-hidden="true"><i class="fas fa-book-quran"></i></div>
                 <h2 class="pv-surah" id="pvSurah"></h2>
-                <p class="pv-reciter" id="pvReciter"></p>
+                <button type="button" class="pv-reciter" data-pv="reciter" id="pvReciterBtn" title="تغيير القارئ">
+                    <i class="fas fa-microphone" aria-hidden="true"></i>
+                    <span id="pvReciter"></span>
+                    <span class="sr-only">— تغيير القارئ</span>
+                    <i class="fas fa-chevron-down pv-reciter-chev" aria-hidden="true"></i>
+                </button>
                 <div class="pv-verse">
                     <p class="pv-basmala" id="pvBasmala" lang="ar" dir="rtl" hidden></p>
                     <p class="pv-ayah" id="pvAyah" lang="ar" dir="rtl"></p>
@@ -70,6 +76,7 @@ const PlayerViews = {
                     <span class="pv-mini-text"><span class="pv-mini-title" id="pvMiniTitle"></span><span class="pv-mini-sub" id="pvMiniSub"></span></span>
                 </button>
                 <button type="button" class="pv-icon" data-pv="toggle" id="pvMiniPlay" aria-label="تشغيل"><i class="fas fa-play" aria-hidden="true"></i></button>
+                <button type="button" class="pv-icon pv-mic" data-pv="reciter" id="pvMiniReciter" aria-label="تغيير القارئ" title="تغيير القارئ"><i class="fas fa-microphone" aria-hidden="true"></i></button>
                 <button type="button" class="pv-icon" data-pv="expand" aria-label="فتح المشغّل الموسّع" title="توسيع"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
                 <button type="button" class="pv-icon" data-pv="close" aria-label="إيقاف التشغيل وإغلاق المشغّل" title="إيقاف وإغلاق"><i class="fas fa-xmark" aria-hidden="true"></i></button>
                 <span class="pv-mini-bar" aria-hidden="true"><span id="pvMiniBar"></span></span>
@@ -82,8 +89,10 @@ const PlayerViews = {
         });
         document.getElementById('pvOverlay').addEventListener('click', () => this.minimize());
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.expanded) { e.preventDefault(); this.minimize(); }
-        });
+            // With the reciter list open on top, Escape closes only the list.
+            const reciterOpen = document.getElementById('reciterModal')?.classList.contains('active');
+            if (e.key === 'Escape' && this.expanded && !reciterOpen) { e.preventDefault(); this.minimize(); }
+        }, true);   // capture: runs before the list's own Escape handler closes it
         const seek = document.getElementById('pvSeek');
         seek.addEventListener('input', () => { this.seeking = true; });
         seek.addEventListener('change', () => {
@@ -117,6 +126,7 @@ const PlayerViews = {
             case 'close': this.closePlayer(); break;
             case 'locate': this.minimize(); QuranDisplay.jumpToPlaying(); break;
             case 'docked': this.setView('docked'); this.minimize(); break;
+            case 'reciter': AudioPlayer.showReciterModal(btn); break;
             case 'compact': this.setView('compact'); break;
         }
     },
@@ -225,6 +235,8 @@ const PlayerViews = {
             }
             const mini = $('pvMini');
             if (mini) mini.classList.toggle('is-playing', state.status === 'playing');
+            const art = $('pvArt');
+            if (art) art.classList.toggle('is-playing', state.status === 'playing');
         }
 
         if (has('itemId', 'surah', 'ayah', 'ayahText', 'ayahCount', 'ayahIndex', 'kind', 'reciter', 'queue', 'meta', 'status')) {

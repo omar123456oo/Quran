@@ -9,7 +9,7 @@
  * Downloaded audio and Mushaf pages are managed by the page (offline-audio.js,
  * mushaf-store.js) in their own caches; this worker never writes or deletes them.
  */
-const VERSION = 'v3';
+const VERSION = 'v4';
 const SHELL = `quran-shell-${VERSION}`;
 const STATIC = `quran-static-${VERSION}`;
 const API = `quran-api-${VERSION}`;
@@ -44,17 +44,25 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
     event.waitUntil((async () => {
         const names = await caches.keys();
-        await Promise.all(names
-            .filter(n => OWN_PREFIXES.some(p => n.startsWith(p)) && !OWN_CACHES.includes(n))
-            .map(n => caches.delete(n)));
+        const old = names.filter(n => OWN_PREFIXES.some(p => n.startsWith(p)) && !OWN_CACHES.includes(n));
+        await Promise.all(old.map(n => caches.delete(n)));
         await self.clients.claim();
+        // Pages from shell v1–v3 have no update handler and may be showing stale files from
+        // the HTTP cache: reload them once. Newer pages reload themselves on controllerchange.
+        // Not awaited: the reload is served by this worker, which must finish activating first.
+        if (old.some(n => /^quran-shell-v[1-3]$/.test(n))) {
+            const wins = await self.clients.matchAll({ type: 'window' });
+            wins.forEach(c => { c.navigate(c.url).catch(() => {}); });
+        }
     })());
 });
 
-async function networkFirst(request, cacheName, fallbackUrl) {
+async function networkFirst(request, cacheName, fallbackUrl, revalidate) {
     const cache = await caches.open(cacheName);
     try {
-        const res = await fetch(request);
+        // App files always revalidate with the server (cheap 304 when unchanged), so an
+        // updated index.html/JS is never hidden behind the browser's heuristic HTTP cache.
+        const res = await fetch(request, revalidate ? { cache: 'no-cache' } : undefined);
         if (res.ok && res.type !== 'opaque') cache.put(request, res.clone());
         return res;
     } catch (e) {
@@ -85,7 +93,7 @@ self.addEventListener('fetch', (event) => {
     if (url.origin === self.location.origin) {
         if (req.headers.has('range')) return;                     // let media ranges pass through
         const navigation = req.mode === 'navigate';
-        event.respondWith(networkFirst(req, SHELL, navigation ? 'index.html' : null));
+        event.respondWith(networkFirst(req, SHELL, navigation ? 'index.html' : null, true));
         return;
     }
     if (STATIC_HOSTS.includes(url.hostname)) {
