@@ -5,16 +5,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description"
-        content="Qur'an Kareem - Complete Holy Qur'an with Audio Recitations, Tafseer, Translations and Islamic Resources">
-    <meta name="keywords" content="Quran, Qur'an, Islam, Tafseer, Recitation, Audio, Translation">
+        content="القرآن الكريم كاملًا بخط عثماني واضح، مع تلاوات صوتية لعدد من القراء، وتفسير، وترجمات، ومصحف رقمي، وأذكار يومية، وبحث في النص القرآني. Qur'an Kareem - the full Holy Qur'an with audio recitations, tafseer and translations.">
+    <meta name="keywords" content="القرآن الكريم, Quran, Qur'an, تفسير, Tafseer, تلاوة, Recitation, ترجمة, Translation, المصحف الرقمي">
     <meta name="author" content="Qur'an Kareem">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://omar.qimacore.com/">
 
     <!-- Open Graph -->
-    <meta property="og:title" content="Qur'an Kareem">
-    <meta property="og:description" content="Read, Listen, and Learn from the Holy Qur'an">
+    <meta property="og:title" content="القرآن الكريم - Qur'an Kareem">
+    <meta property="og:description" content="القرآن الكريم كاملًا مع التلاوات الصوتية والتفسير والترجمات والمصحف الرقمي">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://omar.qimacore.com/">
+    <meta property="og:locale" content="ar_AR">
 
-    <title>Qur'an Kareem - القرآن الكريم</title>
+    <title>القرآن الكريم - Qur'an Kareem | المصحف الشريف كاملًا مع التلاوات والتفسير</title>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "القرآن الكريم - Qur'an Kareem",
+      "url": "https://omar.qimacore.com/",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "ar",
+      "description": "القرآن الكريم كاملًا بخط عثماني واضح، مع تلاوات صوتية، وتفسير، وترجمات، ومصحف رقمي، وأذكار يومية.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +58,7 @@
     <!-- Header -->
     <header class="header" id="header">
         <div class="header-container">
-            <a href="#" class="logo" id="logoLink">
+            <a href="#home" class="logo" id="logoLink">
                 <div class="logo-icon">
                     <i class="fas fa-book-quran"></i>
                 </div>
@@ -60,14 +82,14 @@
                     </button>
                 </div>
                 <ul class="nav-links">
-                    <li><a class="nav-link active" data-page="home">الرئيسية</a></li>
-                    <li><a class="nav-link" data-page="surah">القراءة</a></li>
-                    <li><a class="nav-link" data-page="mushaf">المصحف القارئ</a></li>
-                    <li><a class="nav-link" data-page="playlists">القوائم</a></li>
-                    <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
-                    <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
-                    <li><a class="nav-link" data-page="resources">المصادر</a></li>
-                    <li><a class="nav-link" data-page="settings">الإعدادات</a></li>
+                    <li><a class="nav-link active" href="#home" data-page="home">الرئيسية</a></li>
+                    <li><a class="nav-link" href="#surah" data-page="surah">القراءة</a></li>
+                    <li><a class="nav-link" href="#mushaf" data-page="mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" href="#playlists" data-page="playlists">القوائم</a></li>
+                    <li><a class="nav-link" href="#adhkar" data-page="adhkar">الأذكار</a></li>
+                    <li><a class="nav-link" href="#bookmarks" data-page="bookmarks">المحفوظات</a></li>
+                    <li><a class="nav-link" href="#resources" data-page="resources">المصادر</a></li>
+                    <li><a class="nav-link" href="#settings" data-page="settings">الإعدادات</a></li>
                 </ul>
 
                 <button class="btn-icon" id="themeToggle" title="تبديل الوضع">
@@ -89,6 +111,25 @@
                     <h1>القرآن الكريم</h1>
                     <p class="text-lg" style="color: var(--color-text-gray);">114 سورة</p>
                 </div>
+
+                <section class="home-intro" aria-labelledby="homeIntroHeading">
+                    <h2 id="homeIntroHeading" class="sr-only">عن التطبيق</h2>
+                    <p>
+                        يقدّم تطبيق "القرآن الكريم" المصحف الشريف كاملًا بخط عثماني واضح، مع إمكانية تصفح السور
+                        والأجزاء والصفحات، والاستماع إلى تلاوات صوتية لعدد من القراء المشهورين مثل الشيخ مشاري راشد
+                        العفاسي، مع دعم قوائم التشغيل والطابور والتكرار لتيسير الحفظ والمراجعة.
+                    </p>
+                    <p>
+                        يوفّر التطبيق أيضًا تفسيرًا لكل آية من عدة مصادر معتمدة مثل التفسير الميسّر وتفسير الجلالين
+                        والقرطبي، إلى جانب ترجمات للمعاني بلغات متعددة، وخاصية البحث في النص القرآني الكامل، وحفظ
+                        الآيات المفضلة والعودة إليها لاحقًا من صفحة المحفوظات.
+                    </p>
+                    <p>
+                        كما يضمّ التطبيق مصحفًا رقميًا بصور عالية الجودة لصفحات المصحف الشريف، وقسمًا للأذكار
+                        اليومية (أذكار الصباح والمساء والنوم والصلاة)، وروابط لمصادر إسلامية موثوقة للتعلم والبحث.
+                        جميع الميزات متاحة مجانًا وتعمل مباشرة من المتصفح دون الحاجة إلى تثبيت.
+                    </p>
+                </section>
 
                 <!-- Navigation Tabs -->
                 <div class="flex items-center justify-center gap-4 mt-4 mb-4">

@@ -170,6 +170,7 @@ const App = {
         const navLinks = document.querySelectorAll('.nav-link');
         navLinks.forEach(link => {
             link.addEventListener('click', (e) => {
+                e.preventDefault();
                 const page = e.currentTarget.getAttribute('data-page');
                 this.navigateToPage(page);
             });
