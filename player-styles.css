@@ -168,8 +168,9 @@ body.has-player { padding-bottom: 220px !important; }
 .pl-progress { height: 6px; background: var(--color-bg-light); border-radius: var(--radius-full); overflow: hidden; margin-top: var(--space-3); }
 .pl-progress > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--color-primary), var(--color-accent)); }
 
-/* ---- header: with 8 links the nav wraps to its own row between 769px and 1100px ---- */
-@media (min-width: 769px) and (max-width: 1100px) {
+/* ---- header: with 10 links the nav gets its own row between 769px and 1360px ---- */
+.nav-link, .logo span { white-space: nowrap; }
+@media (min-width: 769px) and (max-width: 1360px) {
   .header-container { flex-wrap: wrap; row-gap: var(--space-2); }
   .search-bar { max-width: none; }
   .nav { order: 3; width: 100%; justify-content: center; }

@@ -105,6 +105,8 @@ test('isWoff2 checks the font signature', () => {
 test('mirrorUrl maps verified reciters only', () => {
     assert.equal(Audio.mirrorUrl('ar.alafasy', 2, 255), 'https://everyayah.com/data/Alafasy_128kbps/002255.mp3');
     assert.equal(Audio.mirrorUrl('ar.mahermuaiqly', 112, 1), 'https://everyayah.com/data/Maher_AlMuaiqly_64kbps/112001.mp3');
+    assert.equal(Audio.mirrorUrl('yasser.aldossari', 2, 255), 'https://everyayah.com/data/Yasser_Ad-Dussary_128kbps/002255.mp3');
+    assert.ok(Audio.MIRROR_ONLY.has('yasser.aldossari'));
     assert.equal(Audio.mirrorUrl('ar.saadalghamadi', 1, 1), null);
     assert.equal(Audio.mirrorUrl('ar.mahmoudalialbanna', 1, 1), null);
 });

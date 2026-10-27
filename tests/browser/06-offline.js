@@ -12,6 +12,7 @@ const { launch } = require('./cdp.js');
 const ROOT = path.join(__dirname, '..', '..');
 const URL_ = 'http://127.0.0.1:8010/index.html';
 const PROFILE = 'offline-e2e';
+const SHELL_CACHE = 'quran-shell-' + require('node:fs').readFileSync(path.join(ROOT, 'sw.js'), 'utf8').match(/const VERSION = '([^']+)'/)[1];
 const NO_NET = ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'];
 const results = [];
 const check = (name, ok, extra = '') => { results.push(!!ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} ${extra}`); };
@@ -32,7 +33,7 @@ const external = (urls) => urls.filter(u => !/^(https?:\/\/127\.0\.0\.1|blob:|da
     let ev = b.ev;
     await b.goto(URL_);
     await b.waitFor('QuranDisplay.surahs.length === 114', 20000);
-    check('service worker installed and shell cached', await b.waitFor(`navigator.serviceWorker.ready.then(r => !!r.active).then(() => caches.has('quran-shell-v1'))`, 20000));
+    check('service worker installed and shell cached', await b.waitFor(`navigator.serviceWorker.ready.then(r => !!r.active).then(() => caches.has('${SHELL_CACHE}'))`, 20000));
     await b.goto(URL_);                                            // now controlled by the worker
     await b.waitFor('QuranDisplay.surahs.length === 114', 20000);
     check('page is controlled by the service worker', await ev('!!navigator.serviceWorker.controller'));

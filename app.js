@@ -257,6 +257,10 @@ const App = {
             AudioPlayer.init();
         }
 
+        if (typeof PlayerViews !== 'undefined') {
+            PlayerViews.init();
+        }
+
         if (typeof Settings !== 'undefined') {
             Settings.init();
         }
@@ -275,6 +279,10 @@ const App = {
 
         if (typeof Downloads !== 'undefined') {
             Downloads.init();
+        }
+
+        if (typeof Explore !== 'undefined') {
+            Explore.init();
         }
     },
 

@@ -13,6 +13,23 @@
 
     const toArabicDigits = (n) => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]);
 
+    /**
+     * The Quran API prefixes ayah 1 of most Surahs with the basmala, which is not part of
+     * that ayah (except in Al-Fatihah; At-Tawbah has none). Returns both parts in the
+     * dataset's own characters; compared after NFC because mark order varies.
+     */
+    const BASMALA_NFC = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ'.normalize('NFC');
+    const splitBasmala = (surah, ayah, text) => {
+        let t = String(text == null ? '' : text).replace(/^﻿/, '');
+        if (Number(ayah) === 1 && Number(surah) !== 1 && Number(surah) !== 9) {
+            const head = t.slice(0, BASMALA_NFC.length);
+            if (head.normalize('NFC') === BASMALA_NFC && t[BASMALA_NFC.length] === ' ') {
+                return { basmala: head, text: t.slice(BASMALA_NFC.length + 1) };
+            }
+        }
+        return { basmala: null, text: t };
+    };
+
     /* ---------------------------------------------------------------- store */
     const PlaybackStore = {
         state: {
@@ -159,5 +176,5 @@
     root.PlaybackStore = PlaybackStore;
     root.PlayerStorage = PlayerStorage;
     root.PlayerState = PlayerState;
-    root.QuranUtil = { esc, toArabicDigits };
+    root.QuranUtil = { esc, toArabicDigits, splitBasmala };
 })(window);

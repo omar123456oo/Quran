@@ -15,12 +15,15 @@
         'ar.husary': 'Husary_128kbps',
         'ar.shaatree': 'Abu_Bakr_Ash-Shaatree_128kbps',
         'ar.abdurrahmaansudais': 'Abdurrahmaan_As-Sudais_192kbps',
-        'ar.mahermuaiqly': 'Maher_AlMuaiqly_64kbps'
+        'ar.mahermuaiqly': 'Maher_AlMuaiqly_64kbps',
+        'yasser.aldossari': 'Yasser_Ad-Dussary_128kbps'
     };
+    // Reciters whose only per-ayah source is the mirror (no alquran.cloud audio to cross-check).
+    const MIRROR_ONLY = new Set(['yasser.aldossari']);
     const pad3 = (n) => String(n).padStart(3, '0');
 
     const Core = {
-        MIRROR,
+        MIRROR, MIRROR_ONLY,
         mirrorUrl(reciter, surah, ayah) {
             const folder = MIRROR[reciter];
             return folder ? `https://everyayah.com/data/${folder}/${pad3(surah)}${pad3(ayah)}.mp3` : null;
@@ -224,9 +227,10 @@
 
         /** Ayah list from the API, mapped to verified mirror files. */
         async resolveList(surah, reciter) {
+            const mirrorOnly = MIRROR_ONLY.has(reciter);
             let data;
             try {
-                data = await APIService.getSurah(surah, reciter);
+                data = await APIService.getSurah(surah, mirrorOnly ? 'quran-uthmani' : reciter);
             } catch (e) {
                 throw Object.assign(new Error('api'), { code: navigator.onLine === false ? 'network' : 'api' });
             }
@@ -237,7 +241,8 @@
             return data.ayahs.map((a, i) => {
                 // The API's file name is the global ayah number; it must match this Surah/ayah.
                 const m = typeof a.audio === 'string' && a.audio.match(/\/(\d+)\.mp3$/);
-                if (a.numberInSurah !== i + 1 || !m || Number(m[1]) !== Core.globalIndex(counts, surah, i + 1) + 1) {
+                if (a.numberInSurah !== i + 1 ||
+                    (!mirrorOnly && (!m || Number(m[1]) !== Core.globalIndex(counts, surah, i + 1) + 1))) {
                     throw Object.assign(new Error('mismatch'), { code: 'mismatch' });
                 }
                 return {

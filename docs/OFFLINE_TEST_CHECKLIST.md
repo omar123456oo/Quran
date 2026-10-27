@@ -15,6 +15,8 @@
 | Browser 06: offline end to end (real network cut-off, restart, server down) | `node tests/browser/06-offline.js` | 33 / 33 pass |
 | Browser 07: responsive (8 sizes × reader, special pages, downloads, home) | `node tests/browser/07-responsive.js` | 102 / 102 pass |
 | Browser 08: Downloads UI, reader panels, swipe, backup | `node tests/browser/08-downloads-ui.js` | 24 / 24 pass |
+| Browser 09 (2026-10-27): player views, explorer, stories & miracles | `node tests/browser/09-home-experience.js` | 62 / 62 pass — see [HOME_EXPERIENCE.md](HOME_EXPERIENCE.md) |
+| Content references (2026-10-27) | `npm run verify:content` | 101 / 101 verified |
 
 How test 06 cuts the network: Chrome is relaunched on the same profile with `--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1` (every external host fails DNS, including requests from the service worker) and the page is emulated offline (`navigator.onLine === false`). For the last session the local web server is stopped as well.
 

@@ -9,7 +9,7 @@
  * Downloaded audio and Mushaf pages are managed by the page (offline-audio.js,
  * mushaf-store.js) in their own caches; this worker never writes or deletes them.
  */
-const VERSION = 'v1';
+const VERSION = 'v3';
 const SHELL = `quran-shell-${VERSION}`;
 const STATIC = `quran-static-${VERSION}`;
 const API = `quran-api-${VERSION}`;
@@ -18,16 +18,19 @@ const OWN_PREFIXES = ['quran-shell-', 'quran-static-', 'quran-api-'];
 
 const SHELL_FILES = [
     './', 'index.html', 'manifest.json',
-    'styles.css', 'adhkar-mushaf-styles.css', 'player-styles.css', 'offline-reader.css',
+    'styles.css', 'adhkar-mushaf-styles.css', 'player-styles.css', 'offline-reader.css', 'home-experience.css',
     'mushaf-meta.js', 'offline-db.js', 'offline-audio.js', 'mushaf-store.js',
     'api-service.js', 'app.js', 'quran-display.js', 'play-queue.js', 'playlists.js',
     'playback-store.js', 'audio-player.js', 'tafseer.js', 'translation.js', 'search.js',
     'bookmarks.js', 'settings.js', 'islamic-resources.js', 'adhkar.js', 'digital-mushaf.js',
-    'playlists-ui.js', 'downloads-ui.js',
+    'playlists-ui.js', 'downloads-ui.js', 'player-views.js', 'explore.js',
+    'content/stories.js', 'content/miracles.js',
     'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'
 ];
 const STATIC_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 const API_PATHS = [/^\/v1\/surah\/?$/, /^\/v1\/meta\/?$/];
+// Verse ranges shown on story/miracle pages (small, bounded set): keep a copy for offline reading.
+const PASSAGE = /^\/v1\/surah\/\d+\/quran-uthmani$/;
 
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
@@ -89,7 +92,8 @@ self.addEventListener('fetch', (event) => {
         event.respondWith(cacheFirst(req));
         return;
     }
-    if (url.hostname === 'api.alquran.cloud' && API_PATHS.some(r => r.test(url.pathname))) {
+    if (url.hostname === 'api.alquran.cloud' && (API_PATHS.some(r => r.test(url.pathname)) ||
+        (PASSAGE.test(url.pathname) && url.searchParams.has('offset')))) {
         event.respondWith(networkFirst(req, API));
     }
     // Everything else (audio, Mushaf data/fonts, search, tafseer) goes straight to the network.

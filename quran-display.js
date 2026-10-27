@@ -138,7 +138,8 @@ const QuranDisplay = {
     createSurahCard(surah) {
         const card = document.createElement('div');
         card.className = 'surah-card';
-        card.onclick = () => this.loadSurah(surah.number);
+        // The card's own buttons (listen, download) must not also open the reader.
+        card.onclick = (e) => { if (!e.target.closest('button')) this.loadSurah(surah.number); };
 
         const revelationType = surah.revelationType === 'Meccan' ? 'مكية' : 'مدنية';
 
@@ -153,6 +154,7 @@ const QuranDisplay = {
             <div class="surah-meta">
                 <span><i class="fas fa-book-open"></i> ${surah.numberOfAyahs} آية</span>
                 <span><i class="fas fa-map-marker-alt"></i> ${revelationType}</span>
+                ${typeof Explore !== 'undefined' ? Explore.playButton(surah.number) : ''}
                 ${typeof Downloads !== 'undefined' ? Downloads.cardButton(surah.number) : ''}
             </div>
         `;

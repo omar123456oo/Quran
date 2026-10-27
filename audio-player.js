@@ -38,7 +38,9 @@ const AudioPlayer = {
         { id: 'ar.shaatree', name: 'أبو بكر الشاطري', nameEn: 'Abu Bakr Al-Shatri' },
         { id: 'ar.abdurrahmaansudais', name: 'عبد الرحمن السديس', nameEn: 'Abdurrahman As-Sudais' },
         { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي', nameEn: 'Maher Al-Muaiqly' },
-        { id: 'ar.mahmoudalialbanna', name: 'محمود علي البنا', nameEn: 'Mahmoud Ali Al-Banna', surahOnly: true }
+        { id: 'ar.mahmoudalialbanna', name: 'محمود علي البنا', nameEn: 'Mahmoud Ali Al-Banna', surahOnly: true },
+        // Per-ayah files exist only on everyayah.com (alquran.cloud has whole-Surah files only).
+        { id: 'yasser.aldossari', name: 'ياسر الدوسري', nameEn: 'Yasser Al-Dosari', mirrorOnly: true }
     ],
 
     get queue() { return PlayerState.queue; },
@@ -181,6 +183,7 @@ const AudioPlayer = {
         }
         const meta = this.reciters.find(r => r.id === reciter);
         if (meta && meta.surahOnly) return this.resolveSurahOnlyTrack(item, reciter);
+        if (meta && meta.mirrorOnly) return this.resolveMirrorAyahs(item, reciter);
 
         let data;
         if (item.kind === 'surah') data = await APIService.getSurah(item.ref, reciter);
@@ -196,6 +199,30 @@ const AudioPlayer = {
                 page: a.page,
                 juz: a.juz
             }))
+            .filter(a => a.audio && Number.isInteger(a.surah) && Number.isInteger(a.numberInSurah));
+    },
+
+    /**
+     * Reciters published per ayah only on everyayah.com: the ayah list (text, page, Juz) comes
+     * from the app's Quran text edition and each file URL from the verified mirror folder.
+     */
+    async resolveMirrorAyahs(item, reciter) {
+        const ed = QuranDisplay.TEXT_EDITION;
+        let data;
+        if (item.kind === 'surah') data = await APIService.getSurah(item.ref, ed);
+        else if (item.kind === 'page') data = await APIService.getPage(item.ref, ed);
+        else data = await APIService.getJuz(item.ref, ed);
+        if (!data || !Array.isArray(data.ayahs)) throw new Error('Unexpected API response');
+        return data.ayahs
+            .map(a => {
+                const surah = a.surah ? a.surah.number : data.number;
+                return {
+                    surah, numberInSurah: a.numberInSurah,
+                    text: typeof a.text === 'string' ? a.text : '',
+                    audio: OfflineAudioCore.mirrorUrl(reciter, surah, a.numberInSurah),
+                    page: a.page, juz: a.juz
+                };
+            })
             .filter(a => a.audio && Number.isInteger(a.surah) && Number.isInteger(a.numberInSurah));
     },
 
@@ -468,6 +495,24 @@ const AudioPlayer = {
 
     playNext() { this.goNext(false); },
 
+    /** Whether verse-by-verse stepping is possible (per-ayah files loaded for the current item). */
+    canStepAyah() {
+        const item = this.queue.current;
+        return !!item && this.loadedItemId === item.id && this.ayahs.length > 0 && !this.ayahs[0].wholeSurah;
+    },
+
+    /** Next/previous verse inside the current item; keeps the paused/playing state. */
+    stepAyah(delta) {
+        if (!this.canStepAyah()) return false;
+        const i = this.ayahIndex + delta;
+        if (i < 0 || i >= this.ayahs.length) return false;
+        const st = PlaybackStore.get().status;
+        this.playIndex(i, { autoplay: st === 'playing' || st === 'buffering' || st === 'loading' });
+        return true;
+    },
+    nextAyah() { return this.stepAyah(1); },
+    previousAyah() { return this.stepAyah(-1); },
+
     playPrevious() {
         const r = this.queue.previous();
         if (r.item) {
@@ -656,7 +701,8 @@ const AudioPlayer = {
 
         if (has('itemId', 'ayah', 'ayahText', 'ayahCount', 'queue', 'kind')) {
             const el = byId('currentAyahText');
-            if (el) el.textContent = state.ayahText || '';       // textContent: never interpreted as HTML
+            // textContent: never interpreted as HTML; the API's basmala prefix is not part of ayah 1
+            if (el) el.textContent = QuranUtil.splitBasmala(state.surah, state.ayah, state.ayahText).text;
             const cur = this.queue.current;
             const title = byId('nowTitle');
             if (title) {
@@ -727,12 +773,14 @@ const AudioPlayer = {
         const c = document.getElementById('audioPlayerContainer');
         if (c) c.classList.remove('hidden');
         document.body.classList.add('has-player');
+        if (typeof PlayerViews !== 'undefined') PlayerViews.sync();
     },
 
     hidePlayer() {
         const c = document.getElementById('audioPlayerContainer');
         if (c) c.classList.add('hidden');
         document.body.classList.remove('has-player');
+        if (typeof PlayerViews !== 'undefined') PlayerViews.sync();
     },
 
     /* ----------------------------------------------------------- reciter */

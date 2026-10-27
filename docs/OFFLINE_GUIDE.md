@@ -12,6 +12,7 @@ How the offline features work, how to run and install the app, and what browsers
 | Surah audio | Yes | Surah downloaded for that reciter |
 | Page/Juz audio ("play this page") | Yes | Every Surah covering that page/Juz downloaded for the reciter |
 | Bookmarks, last-read page and ayah, reading settings | Yes | Stored on the device (localStorage) |
+| Stories / Miracles pages, Makki–Madani explorer | Yes / partly | Explorer and story texts are bundled; the Quranic passages on a story page are available offline after that page was opened once online |
 | Text reader (القراءة), search, tafseer, translations | No | Need the network; a clear error is shown |
 
 ## Using it
