@@ -1,0 +1,1105 @@
+:root {
+  /* Islamic Color Palette */
+  --color-primary: #1e7b5f;
+  --color-primary-dark: #155843;
+  --color-primary-light: #2a9d7a;
+  --color-accent: #d4af37;
+  --color-accent-dark: #b8941f;
+  --color-accent-light: #e8c960;
+
+  /* Neutral Colors */
+  --color-bg-light: #faf9f7;
+  --color-bg-white: #ffffff;
+  --color-text-dark: #1a1a1a;
+  --color-text-gray: #666666;
+  --color-text-light: #999999;
+  --color-border: #e5e5e5;
+
+  /* Dark Mode Colors */
+  --color-dark-bg: #0f1419;
+  --color-dark-surface: #1a1f26;
+  --color-dark-elevated: #242b33;
+  --color-dark-text: #e8e8e8;
+  --color-dark-text-secondary: #b0b0b0;
+  --color-dark-border: #2d3642;
+
+  /* Semantic Colors */
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+  --color-info: #3b82f6;
+
+  /* Typography */
+  --font-arabic: 'Amiri', 'Traditional Arabic', serif;
+  --font-latin: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+
+  /* Font Sizes */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Z-index */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  --color-bg-light: var(--color-dark-bg);
+  --color-bg-white: var(--color-dark-surface);
+  --color-text-dark: var(--color-dark-text);
+  --color-text-gray: var(--color-dark-text-secondary);
+  --color-border: var(--color-dark-border);
+}
+
+/* Reset & Base Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-latin);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-text-dark);
+  background: var(--color-bg-light);
+  transition: background-color var(--transition-base), color var(--transition-base);
+  min-height: 100vh;
+  padding-bottom: 180px;
+  /* Space for fixed audio player */
+}
+
+/* Arabic Text Styling */
+.arabic-text {
+  font-family: var(--font-arabic);
+  font-size: var(--text-2xl);
+  line-height: 2.2;
+  text-align: right;
+  direction: rtl;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Typography */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: var(--space-4);
+  color: var(--color-text-dark);
+}
+
+h1 {
+  font-size: var(--text-4xl);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+}
+
+h3 {
+  font-size: var(--text-2xl);
+}
+
+h4 {
+  font-size: var(--text-xl);
+}
+
+h5 {
+  font-size: var(--text-lg);
+}
+
+h6 {
+  font-size: var(--text-base);
+}
+
+p {
+  margin-bottom: var(--space-4);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-primary-dark);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+/* Header */
+.header {
+  background: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-base);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-6);
+  gap: var(--space-6);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: var(--text-xl);
+}
+
+/* Mobile Menu Toggle */
+.mobile-menu-toggle {
+  display: none;
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-dark);
+  font-size: var(--text-xl);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  /* Remove tap highlight on mobile */
+}
+
+.mobile-menu-toggle:hover,
+.mobile-menu-toggle:focus {
+  background: var(--color-bg-light);
+  color: var(--color-primary);
+  outline: none;
+}
+
+.mobile-menu-toggle:active {
+  background: var(--color-primary);
+  color: white;
+  transform: scale(0.95);
+}
+
+.mobile-menu-toggle.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+.mobile-menu-toggle i {
+  transition: transform var(--transition-base);
+}
+
+.mobile-menu-toggle.active i {
+  transform: rotate(90deg);
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.nav-links {
+  display: flex;
+  gap: var(--space-2);
+  list-style: none;
+}
+
+.nav-link {
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-gray);
+  font-weight: 500;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.nav-link.active {
+  background: var(--color-primary);
+  color: white;
+}
+
+/* Search Bar */
+.search-bar {
+  position: relative;
+  flex: 1;
+  max-width: 400px;
+}
+
+.search-input {
+  width: 100%;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-12);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  transition: all var(--transition-fast);
+  background: var(--color-bg-light);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 123, 95, 0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--color-bg-white);
+  color: var(--color-text-dark);
+  border: 2px solid var(--color-border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.btn-icon {
+  padding: var(--space-3);
+  background: transparent;
+  color: var(--color-text-gray);
+}
+
+.btn-icon:hover {
+  background: var(--color-bg-light);
+  color: var(--color-primary);
+}
+
+/* Cards */
+.card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-base);
+  border: 1px solid var(--color-border);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+.card-glass {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+[data-theme="dark"] .card-glass {
+  background: rgba(26, 31, 38, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Main Content Area */
+.main {
+  padding: var(--space-8) 0;
+  min-height: calc(100vh - 200px);
+}
+
+/* Surah List */
+.surah-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+
+.surah-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.surah-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  transform: scaleX(0);
+  transition: transform var(--transition-base);
+}
+
+.surah-card:hover::before {
+  transform: scaleX(1);
+}
+
+.surah-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-4px);
+}
+
+.surah-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.surah-number {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+
+.surah-info {
+  flex: 1;
+  padding: 0 var(--space-4);
+}
+
+.surah-name-arabic {
+  font-family: var(--font-arabic);
+  font-size: var(--text-2xl);
+  color: var(--color-text-dark);
+  margin-bottom: var(--space-1);
+}
+
+.surah-name-transliteration {
+  font-size: var(--text-base);
+  color: var(--color-text-gray);
+  font-weight: 500;
+}
+
+.surah-meta {
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-light);
+  margin-top: var(--space-3);
+}
+
+/* Ayah Display */
+.ayah-container {
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: var(--color-bg-white);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-base);
+}
+
+.ayah-container:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.ayah-arabic {
+  font-family: var(--font-arabic);
+  font-size: 2rem;
+  line-height: 2.5;
+  text-align: right;
+  direction: rtl;
+  color: var(--color-text-dark);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border-right: 4px solid var(--color-accent);
+}
+
+.ayah-translation {
+  font-size: var(--text-lg);
+  color: var(--color-text-gray);
+  line-height: 1.8;
+  padding: var(--space-4);
+  background: var(--color-bg-light);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-4);
+}
+
+.ayah-controls {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Audio Player Container */
+#audioPlayerContainer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-fixed);
+  padding: var(--space-4);
+  padding-bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
+  background: transparent;
+  pointer-events: none;
+}
+
+#audioPlayerContainer>* {
+  pointer-events: auto;
+}
+
+/* Audio Player */
+.audio-player {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-2xl);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+[data-theme="dark"] .audio-player {
+  background: rgba(26, 31, 38, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.audio-progress {
+  width: 100%;
+  height: 6px;
+  background: var(--color-bg-light);
+  border-radius: var(--radius-full);
+  margin-bottom: var(--space-4);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.audio-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: var(--radius-full);
+  transition: width 100ms linear;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.audio-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.audio-btn:hover {
+  background: var(--color-primary-dark);
+  transform: scale(1.05);
+}
+
+.audio-btn.play-btn {
+  width: 56px;
+  height: 56px;
+  box-shadow: var(--shadow-md);
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: var(--z-modal);
+  animation: fadeIn var(--transition-base);
+}
+
+.modal.active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  position: relative;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-8);
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-2xl);
+  animation: slideUp var(--transition-base);
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: var(--radius-full);
+  animation: spin 1s linear infinite;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  background: var(--color-dark-surface);
+  color: white;
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  z-index: var(--z-tooltip);
+  animation: slideUp var(--transition-base);
+  max-width: 400px;
+}
+
+.toast.success {
+  background: var(--color-success);
+}
+
+.toast.error {
+  background: var(--color-error);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+    position: relative;
+  }
+
+  .search-bar {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Show mobile menu toggle */
+  .mobile-menu-toggle {
+    display: flex;
+    order: 2;
+  }
+
+  /* Mobile Navigation */
+  .nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 300px;
+    max-width: 85%;
+    height: 100vh;
+    background: var(--color-bg-white);
+    box-shadow: var(--shadow-2xl);
+    z-index: var(--z-modal);
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    padding: var(--space-6);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nav.active {
+    right: 0;
+  }
+
+  /* Mobile menu header with close button */
+  .mobile-menu-header {
+    display: none;
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @media (max-width: 768px) {
+    .mobile-menu-header {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  .mobile-menu-close {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border: none;
+    background: var(--color-bg-light);
+    color: var(--color-text-dark);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: var(--text-base);
+    transition: all var(--transition-fast);
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-menu-close:hover,
+  .mobile-menu-close:focus {
+    background: var(--color-error);
+    color: white;
+    outline: none;
+  }
+
+  .mobile-menu-close:active {
+    transform: scale(0.95);
+  }
+
+  /* Remove the ::before pseudo-element since we have a real header now */
+  .nav::before {
+    display: none;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+    flex: 1;
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: right;
+    padding: var(--space-4) var(--space-5);
+    font-size: var(--text-lg);
+    min-height: 48px;
+    /* Better touch target */
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .nav-link:active {
+    transform: scale(0.98);
+  }
+
+  /* Theme toggle in mobile menu */
+  .nav .btn-icon {
+    width: 100%;
+    padding: var(--space-4);
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    font-size: var(--text-xl);
+    min-height: 48px;
+  }
+
+  /* Mobile menu backdrop */
+  .mobile-menu-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+    z-index: calc(var(--z-modal) - 1);
+    opacity: 0;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-menu-backdrop.active {
+    /* display: block; */
+    opacity: 1;
+  }
+
+  .surah-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ayah-arabic {
+    font-size: 1.5rem;
+    line-height: 2.2;
+  }
+
+  /* Mobile Audio Player Styles */
+  body {
+    padding-bottom: 140px !important;
+    /* Reduced padding for mobile */
+  }
+
+  #audioPlayerContainer {
+    padding: var(--space-2);
+    padding-bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .audio-player {
+    padding: var(--space-4);
+    border-radius: var(--radius-lg);
+  }
+
+  .audio-info {
+    margin-bottom: var(--space-3) !important;
+  }
+
+  .audio-info .flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: var(--space-2);
+  }
+
+  #currentAyahText {
+    font-size: var(--text-sm) !important;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #currentReciter {
+    font-size: var(--text-xs);
+  }
+
+  .audio-controls {
+    flex-wrap: wrap;
+    gap: var(--space-2) !important;
+    justify-content: center;
+  }
+
+  .audio-btn {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: var(--text-sm);
+  }
+
+  .audio-btn.play-btn {
+    width: 48px !important;
+    height: 48px !important;
+  }
+
+  /* Hide repeat count selector on mobile - use button only */
+  #repeatCountSelect {
+    display: none !important;
+  }
+
+  /* Make volume control more compact */
+  .audio-controls .flex-1 {
+    width: 100%;
+    order: 10;
+    margin-top: var(--space-2);
+    margin-right: 0 !important;
+  }
+
+  #volumeSlider {
+    width: 100%;
+  }
+
+  /* Time display */
+  #currentTime,
+  #duration {
+    font-size: var(--text-xs);
+  }
+
+  /* Progress bar */
+  .audio-progress {
+    height: 4px;
+    margin-bottom: var(--space-3);
+  }
+
+  /* Toast notifications position adjustment */
+  .toast {
+    bottom: 150px;
+    /* Above audio player */
+    right: var(--space-4);
+    left: var(--space-4);
+    max-width: calc(100% - 2 * var(--space-4));
+  }
+}
+
+/* Utility Classes */
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.mt-4 {
+  margin-top: var(--space-4);
+}
+
+.mb-4 {
+  margin-bottom: var(--space-4);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.gap-4 {
+  gap: var(--space-4);
+}
+
+/* Pagination Styles */
+.pagination-container {
+  margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 1rem 0;
+}
+
+.pagination-btn {
+  min-width: 40px;
+  height: 40px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--color-border);
+  background: var(--color-bg-white);
+  color: var(--color-text-dark);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.btn-primary {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .pagination-btn {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-light);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .pagination-btn:hover:not(:disabled) {
+  background: var(--color-primary);
+  color: white;
+}

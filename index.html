@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head> 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1e7b5f">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="القرآن الكريم">
+    <meta name="description"
+        content="القرآن الكريم كاملًا بخط عثماني واضح، مع تلاوات صوتية لعدد من القراء، وتفسير، وترجمات، ومصحف رقمي، وأذكار يومية، وبحث في النص القرآني. Qur'an Kareem - the full Holy Qur'an with audio recitations, tafseer and translations.">
+    <meta name="keywords" content="القرآن الكريم, Quran, Qur'an, تفسير, Tafseer, تلاوة, Recitation, ترجمة, Translation, المصحف الرقمي">
+    <meta name="author" content="Qur'an Kareem">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://omar.qimacore.com/">
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="القرآن الكريم - Qur'an Kareem">
+    <meta property="og:description" content="القرآن الكريم كاملًا مع التلاوات الصوتية والتفسير والترجمات والمصحف الرقمي">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://omar.qimacore.com/">
+    <meta property="og:locale" content="ar_AR">
+
+    <title>القرآن الكريم - Qur'an Kareem | المصحف الشريف كاملًا مع التلاوات والتفسير</title>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "القرآن الكريم - Qur'an Kareem",
+      "url": "https://omar.qimacore.com/",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Any",
+      "inLanguage": "ar",
+      "description": "القرآن الكريم كاملًا بخط عثماني واضح، مع تلاوات صوتية، وتفسير، وترجمات، ومصحف رقمي، وأذكار يومية.",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Amiri+Quran&family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet" crossorigin="anonymous">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="adhkar-mushaf-styles.css">
+    <link rel="stylesheet" href="player-styles.css">
+    <link rel="stylesheet" href="offline-reader.css">
+    <link rel="stylesheet" href="home-experience.css">
+
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="header-container">
+            <a href="#home" class="logo" id="logoLink">
+                <div class="logo-icon">
+                    <i class="fas fa-book-quran"></i>
+                </div>
+                <span>القرآن الكريم</span>
+            </a>
+
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" placeholder="بحث في القرآن الكريم...">
+            </div>
+
+            <nav class="nav">
+                <div class="mobile-menu-header" style="display: none;">
+                    <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">
+                        <i class="fas fa-times"></i>
+                        <span>إغلاق</span>
+                    </button>
+                </div>
+                <ul class="nav-links">
+                    <li><a class="nav-link active" data-page="home">الرئيسية</a></li>
+                    <li><a class="nav-link" data-page="surah">القراءة</a></li>
+                    <li><a class="nav-link" data-page="mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" data-page="explore">استكشف</a></li>
+                    <li><a class="nav-link" data-page="playlists">القوائم</a></li>
+                    <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
+                    <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
+                    <li><a class="nav-link" data-page="downloads">التنزيلات</a></li>
+                    <li><a class="nav-link" data-page="resources">المصادر</a></li>
+                    <li><a class="nav-link" data-page="settings">الإعدادات</a></li>
+                </ul>
+
+                <button class="btn-icon" id="themeToggle" title="تبديل الوضع">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Connectivity banner -->
+    <div id="offlineBanner" class="offline-banner" role="status" aria-live="polite" hidden>
+        <i class="fas fa-plane" aria-hidden="true"></i>
+        <span>أنت غير متصل بالإنترنت — يمكنك قراءة صفحات المصحف والاستماع إلى السور المحمّلة.</span>
+        <a href="#" data-page-link="downloads">التنزيلات</a>
+    </div>
+
+    <!-- Mobile Menu Backdrop -->
+    <div class="mobile-menu-backdrop" id="mobileMenuBackdrop"></div>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container" id="mainContent">
+            <!-- Home Page (Surah List) -->
+            <div id="homePage" class="page active">
+                <div class="page-header text-center">
+                    <h1>القرآن الكريم</h1>
+                    <p class="text-lg" style="color: var(--color-text-gray);">114 سورة</p>
+                </div>
+
+                <!-- Entry to the Explore page -->
+                <button type="button" class="hx-teaser" data-page-go="explore">
+                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-kaaba"></i><i class="fas fa-book-open-reader"></i><i class="fas fa-star-and-crescent"></i></span>
+                    <span class="hx-teaser-text">
+                        <strong>استكشف القرآن الكريم</strong>
+                        <span>السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
+                    </span>
+                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                </button>
+
+                <h2 class="hx-block-title hx-index-title">فهرس المصحف</h2>
+
+                <!-- Navigation Tabs -->
+                <div class="flex items-center justify-center gap-4 mt-4 mb-4">
+                    <button class="btn btn-secondary active" id="surahTab">السور</button>
+                    <button class="btn btn-secondary" id="juzTab">الأجزاء</button>
+                    <button class="btn btn-secondary" id="pageTab">الصفحات</button>
+                </div>
+
+                <div id="surahList" class="surah-grid">
+                    <!-- Surahs will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Surah Reading Page -->
+            <div id="surahPage" class="page hidden">
+                <div class="page-header mb-4">
+                    <button class="btn btn-secondary" id="backToHome">
+                        <i class="fas fa-arrow-right"></i>
+                        العودة
+                    </button>
+                    <button class="btn btn-secondary" id="jumpToPlayingBtn" hidden>
+                        <i class="fas fa-location-crosshairs" aria-hidden="true"></i>
+                        العودة للآية الجارية
+                    </button>
+                    <label class="follow-toggle">
+                        <input type="checkbox" id="followPlaybackToggle"> تتبع التشغيل
+                    </label>
+                </div>
+
+                <div id="surahContent">
+                    <!-- Surah content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Playlists & Queue Page -->
+            <div id="playlistsPage" class="page hidden">
+                <div class="page-header">
+                    <h2><i class="fas fa-list-ul" aria-hidden="true"></i> قوائم التشغيل والطابور</h2>
+                </div>
+                <div id="playlistsContent" class="pl-layout">
+                    <section id="npSection" class="pl-card" aria-labelledby="npHeading"></section>
+                    <section id="qSection" class="pl-card" aria-labelledby="qHeading"></section>
+                    <section id="plSection" class="pl-card" aria-labelledby="plHeading"></section>
+                    <section id="pickerSection" class="pl-card" aria-labelledby="pickerHeading"></section>
+                </div>
+            </div>
+
+            <!-- Bookmarks Page -->
+            <div id="bookmarksPage" class="page hidden">
+                <div class="page-header">
+                    <h2>المحفوظات والمفضلات</h2>
+                </div>
+                <div id="bookmarksList">
+                    <!-- Bookmarks will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Explore page: Makki/Madani, Stories, Miracles -->
+            <div id="explorePage" class="page hidden">
+                <header class="hx-hero">
+                    <h1>استكشف القرآن الكريم</h1>
+                    <p>تعرّف على السور المكية والمدنية، واقرأ قصص الأنبياء ومعجزاتهم كما وردت في آيات القرآن الكريم.</p>
+                </header>
+
+                <nav class="hx-jump" aria-label="أقسام الصفحة">
+                    <a href="#exRev" class="hx-jump-link"><i class="fas fa-kaaba" aria-hidden="true"></i> مكية ومدنية</a>
+                    <a href="#exStories" class="hx-jump-link"><i class="fas fa-book-open-reader" aria-hidden="true"></i> قصص الأنبياء <span class="hx-jump-count" id="exStoriesCount"></span></a>
+                    <a href="#exMiracles" class="hx-jump-link"><i class="fas fa-star-and-crescent" aria-hidden="true"></i> معجزات الأنبياء <span class="hx-jump-count" id="exMiraclesCount"></span></a>
+                </nav>
+
+                <section class="hx-block" id="exRev" aria-labelledby="hxRevH">
+                    <div class="hx-sec-head">
+                        <h2 class="hx-block-title" id="hxRevH"><i class="fas fa-kaaba" aria-hidden="true"></i> السور المكية والمدنية</h2>
+                        <p>المكي ما نزل قبل الهجرة، والمدني ما نزل بعدها. اختر قسمًا لعرض سوره.</p>
+                    </div>
+                    <div class="hx-rev-cards" id="hxRevCards"></div>
+                </section>
+
+                <div class="hx-search hx-explore-search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" id="exploreSearch" aria-label="بحث في القصص والمعجزات" placeholder="ابحث في القصص والمعجزات (اسم النبي، السورة…)" autocomplete="off">
+                    <span id="exploreStatus" class="hx-search-status" role="status" aria-live="polite"></span>
+                </div>
+
+                <section class="hx-block" id="exStories" aria-labelledby="hxStoriesH">
+                    <div class="hx-sec-head">
+                        <h2 class="hx-block-title" id="hxStoriesH"><i class="fas fa-book-open-reader" aria-hidden="true"></i> قصص الأنبياء</h2>
+                        <p>قصص من القرآن الكريم، مع الآيات ومواضعها وشرح مبسّط ودروس وعبر.</p>
+                    </div>
+                    <div class="hx-grid" id="hxStoriesRow" role="list" aria-label="قصص الأنبياء"></div>
+                </section>
+
+                <section class="hx-block" id="exMiracles" aria-labelledby="hxMiraclesH">
+                    <div class="hx-sec-head">
+                        <h2 class="hx-block-title" id="hxMiraclesH"><i class="fas fa-star-and-crescent" aria-hidden="true"></i> معجزات الأنبياء</h2>
+                        <p>آيات أيّد الله بها رسله، مذكورة في القرآن الكريم، ويُميَّز ما ورد في السنة الصحيحة مع مصدره.</p>
+                    </div>
+                    <div class="hx-grid" id="hxMiraclesRow" role="list" aria-label="معجزات الأنبياء"></div>
+                </section>
+
+                <p class="hx-source"><i class="fas fa-circle-info" aria-hidden="true"></i>
+                    نصوص الآيات بالرسم العثماني من مصدر بيانات القارئ نفسه، ومواضعها متحقق منها آليًا. «الشرح المبسّط» تقريب لمعاني الآيات وليس تفسيرًا معتمدًا.</p>
+            </div>
+
+            <!-- Makki / Madani explorer -->
+            <div id="revelationPage" class="page hidden">
+                <div id="revelationContent"></div>
+            </div>
+
+            <!-- Story / miracle reading page -->
+            <div id="articlePage" class="page hidden">
+                <div id="articleContent"></div>
+            </div>
+
+            <!-- Downloads Page -->
+            <div id="downloadsPage" class="page hidden">
+                <div class="page-header">
+                    <h2><i class="fas fa-download" aria-hidden="true"></i> التنزيلات والقراءة دون اتصال</h2>
+                    <p>نزّل السور والصفحات لتستمع وتقرأ دون إنترنت</p>
+                </div>
+                <div id="downloadsContent" class="dl-layout"></div>
+            </div>
+
+            <!-- Resources Page -->
+            <div id="resourcesPage" class="page hidden">
+                <div class="page-header">
+                    <h2>المصادر الإسلامية</h2>
+                    <p>مواقع موثوقة للتعلم والبحث</p>
+                </div>
+                <div id="resourcesList">
+                    <!-- Resources will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Digital Mushaf Page -->
+            <div id="mushafPage" class="page hidden">
+                <h2 class="sr-only">المصحف القارئ الإلكتروني</h2>
+                <div id="mushafContent">
+                    <!-- Mushaf content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Adhkar Page -->
+            <div id="adhkarPage" class="page hidden">
+                <div class="page-header text-center">
+                    <h2><i class="fas fa-hands-praying"></i> الأذكار</h2>
+                    <p>أذكار المسلم في جميع الأوقات</p>
+                </div>
+                
+                <!-- Adhkar Categories -->
+                <div class="flex items-center justify-center gap-4 mt-4 mb-4" style="flex-wrap: wrap;">
+                    <button class="btn btn-secondary active" onclick="Adhkar.loadAdhkar('morning')">
+                        <i class="fas fa-sun"></i> أذكار الصباح
+                    </button>
+                    <button class="btn btn-secondary" onclick="Adhkar.loadAdhkar('evening')">
+                        <i class="fas fa-moon"></i> أذكار المساء
+                    </button>
+                    <button class="btn btn-secondary" onclick="Adhkar.loadAdhkar('sleep')">
+                        <i class="fas fa-bed"></i> أذكار النوم
+                    </button>
+                    <button class="btn btn-secondary" onclick="Adhkar.loadAdhkar('prayer')">
+                        <i class="fas fa-praying-hands"></i> أذكار الصلاة
+                    </button>
+                    <button class="btn btn-secondary" onclick="Adhkar.loadAdhkar('general')">
+                        <i class="fas fa-star"></i> أذكار عامة
+                    </button>
+                </div>
+
+                <div id="adhkarContent">
+                    <!-- Adhkar content will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Settings Page -->
+            <div id="settingsPage" class="page hidden">
+                <div class="page-header">
+                    <h2>الإعدادات</h2>
+                </div>
+                <div id="settingsContent">
+                    <!-- Settings will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Search Results Page -->
+            <div id="searchPage" class="page hidden">
+                <div class="page-header">
+                    <h2>نتائج البحث</h2>
+                </div>
+                <div id="searchResults">
+                    <!-- Search results will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Audio Player (Sticky Bottom) -->
+    <div id="audioPlayerContainer" class="hidden">
+        <!-- One slim line: info · prev/play/next · time · more · open popup · compact.
+             Secondary controls sit in the "more" panel above it. -->
+        <div class="audio-player ap-slim" role="region" aria-label="مشغّل الصوت">
+            <div class="audio-progress" id="audioProgress" role="slider" tabindex="0" aria-label="موضع التشغيل"
+                aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="audio-progress-bar" id="audioProgressBar"></div>
+            </div>
+
+            <div class="ap-more" id="apMore" hidden>
+                <button class="audio-btn" id="shuffleBtn" title="تشغيل عشوائي" aria-label="تشغيل عشوائي" aria-pressed="false">
+                    <i class="fas fa-shuffle" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="repeatBtn" title="التكرار متوقف" aria-label="التكرار متوقف">
+                    <i class="fas fa-repeat" aria-hidden="true"></i>
+                    <span id="repeatCountDisplay" class="repeat-badge"></span>
+                </button>
+                <select id="repeatCountSelect" class="repeat-select" aria-label="عدد مرات تكرار السورة">
+                    <option value="0">∞</option>
+                    <option value="2">2×</option>
+                    <option value="3">3×</option>
+                    <option value="5">5×</option>
+                    <option value="7">7×</option>
+                    <option value="10">10×</option>
+                </select>
+                <label class="ap-volume">
+                    <i class="fas fa-volume-up" aria-hidden="true"></i>
+                    <input type="range" min="0" max="100" value="80" id="volumeSlider" aria-label="مستوى الصوت">
+                </label>
+                <button class="audio-btn" id="reciterBtn" title="اختيار القارئ" aria-label="اختيار القارئ">
+                    <i class="fas fa-microphone" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="queueBtn" title="الطابور وقوائم التشغيل" aria-label="فتح الطابور وقوائم التشغيل">
+                    <i class="fas fa-list-ul" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="addToPlaylistBtn" title="إضافة السورة إلى قائمة التشغيل" aria-label="إضافة السورة الحالية إلى قائمة التشغيل">
+                    <i class="fas fa-folder-plus" aria-hidden="true"></i>
+                </button>
+                <button class="audio-btn" id="locateBtn" title="عرض في القارئ" aria-label="عرض الآية الجارية في القارئ">
+                    <i class="fas fa-book-open" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="ap-row">
+                <div class="audio-info">
+                    <div class="audio-now">
+                        <span class="audio-now-label sr-only">يقرأ الآن</span>
+                        <span id="nowTitle" class="audio-now-title"></span>
+                        <span id="nextUp" class="audio-next-up sr-only"></span>
+                    </div>
+                    <div class="ap-sub">
+                        <span class="arabic-text audio-ayah" id="currentAyahText" lang="ar" dir="rtl"></span>
+                        <span id="currentReciter" class="ap-reciter">مشاري راشد العفاسي</span>
+                        <span id="playerStatus" class="player-status" role="status" aria-live="polite"></span>
+                    </div>
+                </div>
+
+                <div class="audio-controls ap-main">
+                    <button class="audio-btn" id="prevBtn" title="السابق" aria-label="العنصر السابق">
+                        <i class="fas fa-forward-step" aria-hidden="true"></i>
+                    </button>
+                    <button class="audio-btn play-btn" id="playPauseBtn" title="تشغيل" aria-label="تشغيل">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                    </button>
+                    <button class="audio-btn" id="nextBtn" title="التالي" aria-label="العنصر التالي">
+                        <i class="fas fa-backward-step" aria-hidden="true"></i>
+                    </button>
+                </div>
+
+                <span class="ap-time"><span id="currentTime">0:00</span> / <span id="duration">0:00</span></span>
+
+                <div class="ap-side">
+                    <button class="audio-btn ap-ghost" id="apMoreBtn" type="button" aria-expanded="false" aria-controls="apMore" title="المزيد من عناصر التحكم" aria-label="المزيد من عناصر التحكم">
+                        <i class="fas fa-ellipsis" aria-hidden="true"></i>
+                    </button>
+                    <button class="audio-btn ap-ghost" id="dockExpandBtn" type="button" data-pv="expand" title="فتح المشغّل الموسّع" aria-label="فتح المشغّل الموسّع">
+                        <i class="fas fa-up-right-and-down-left-from-center" aria-hidden="true"></i>
+                    </button>
+                    <button class="audio-btn ap-ghost" id="dockMinimizeBtn" type="button" data-pv="compact" title="تصغير المشغّل" aria-label="تصغير المشغّل">
+                        <i class="fas fa-down-left-and-up-right-to-center" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tafseer Modal -->
+    <div id="tafseerModal" class="modal">
+        <div class="modal-backdrop" id="tafseerBackdrop"></div>
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3>التفسير</h3>
+                <button class="btn-icon" id="closeTafseerModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="tafseerContent">
+                <!-- Tafseer content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Reciter Selection Modal -->
+    <div id="reciterModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="reciterTitle">
+        <div class="modal-backdrop" id="reciterBackdrop"></div>
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="reciterTitle">اختيار القارئ</h3>
+                <button class="btn-icon" id="closeReciterModal" aria-label="إغلاق">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="reciterList">
+                <!-- Reciter list will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="hidden"
+        style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="mushaf-meta.js"></script>
+    <script src="offline-db.js"></script>
+    <script src="offline-audio.js"></script>
+    <script src="mushaf-store.js"></script>
+    <script src="api-service.js"></script>
+    <script src="app.js"></script>
+    <script src="quran-display.js"></script>
+    <script src="play-queue.js"></script>
+    <script src="playlists.js"></script>
+    <script src="playback-store.js"></script>
+    <script src="audio-player.js"></script>
+    <script src="tafseer.js"></script>
+    <script src="translation.js"></script>
+    <script src="search.js"></script>
+    <script src="bookmarks.js"></script>
+    <script src="settings.js"></script>
+    <script src="islamic-resources.js"></script>
+    <script src="adhkar.js"></script>
+    <script src="digital-mushaf.js"></script>
+    <script src="playlists-ui.js"></script>
+    <script src="downloads-ui.js"></script>
+    <script src="player-views.js"></script>
+    <script src="explore.js"></script>
+</body>
+
+</html>

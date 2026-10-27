@@ -1,0 +1,24 @@
+{
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "build": "node scripts/build-web.js",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "for f in tests/browser/0*.js; do node $f || exit 1; done",
+    "verify:mushaf": "node tools/verify-mushaf.js",
+    "build:mushaf-meta": "python3 tools/build-mushaf-meta.py",
+    "verify:content": "python3 tools/verify-content.py"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/splash-screen": "^8.0.2",
+    "@capacitor/status-bar": "^8.0.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}
