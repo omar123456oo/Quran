@@ -22,8 +22,14 @@ const QuranDisplay = {
         try {
             App.showLoading();
 
-            // Load all Surahs metadata
-            this.surahs = await APIService.getSurahs();
+            // Load all Surahs metadata; offline, fall back to the bundled verified list.
+            try {
+                this.surahs = await APIService.getSurahs();
+            } catch (e) {
+                this.surahs = MushafMeta.surahs.map((s, i) => ({
+                    number: i + 1, name: s[0], englishName: s[1], numberOfAyahs: s[2], revelationType: s[3]
+                }));
+            }
 
             // Display Surah list
             this.displaySurahList();
@@ -147,6 +153,7 @@ const QuranDisplay = {
             <div class="surah-meta">
                 <span><i class="fas fa-book-open"></i> ${surah.numberOfAyahs} آية</span>
                 <span><i class="fas fa-map-marker-alt"></i> ${revelationType}</span>
+                ${typeof Downloads !== 'undefined' ? Downloads.cardButton(surah.number) : ''}
             </div>
         `;
 

@@ -3,7 +3,9 @@
     "start": "python3 -m http.server 8000",
     "build": "node scripts/build-web.js",
     "test": "node --test tests/*.test.js",
-    "test:browser": "for f in tests/browser/0*.js; do node $f || exit 1; done"
+    "test:browser": "for f in tests/browser/0*.js; do node $f || exit 1; done",
+    "verify:mushaf": "node tools/verify-mushaf.js",
+    "build:mushaf-meta": "python3 tools/build-mushaf-meta.py"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.3",
