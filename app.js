@@ -60,7 +60,23 @@ const App = {
     /** Service workers need a secure context: HTTPS in production, or localhost in development. */
     registerServiceWorker() {
         if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-        navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service worker registration failed', e));
+        // When an updated worker takes over a page that an older one was controlling,
+        // reload once so the page shows the new version instead of the old cached files.
+        const hadController = !!navigator.serviceWorker.controller;
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!hadController || reloaded) return;
+            reloaded = true;
+            const st = typeof PlaybackStore !== 'undefined' ? PlaybackStore.get().status : 'idle';
+            if (st === 'playing' || st === 'buffering') {      // never cut a recitation short
+                this.showToast('يتوفر تحديث للتطبيق، وسيظهر عند إعادة فتح الصفحة', 'info');
+                return;
+            }
+            window.location.reload();
+        });
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+            .then((reg) => reg.update())
+            .catch((e) => console.warn('Service worker registration failed', e));
     },
 
     /**

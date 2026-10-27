@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl"> 
 
 <head> 
     <meta charset="UTF-8">
@@ -365,9 +365,6 @@
                     <i class="fas fa-volume-up" aria-hidden="true"></i>
                     <input type="range" min="0" max="100" value="80" id="volumeSlider" aria-label="مستوى الصوت">
                 </label>
-                <button class="audio-btn" id="reciterBtn" title="اختيار القارئ" aria-label="اختيار القارئ">
-                    <i class="fas fa-microphone" aria-hidden="true"></i>
-                </button>
                 <button class="audio-btn" id="queueBtn" title="الطابور وقوائم التشغيل" aria-label="فتح الطابور وقوائم التشغيل">
                     <i class="fas fa-list-ul" aria-hidden="true"></i>
                 </button>
@@ -408,6 +405,9 @@
                 <span class="ap-time"><span id="currentTime">0:00</span> / <span id="duration">0:00</span></span>
 
                 <div class="ap-side">
+                    <button class="audio-btn ap-ghost ap-mic" id="reciterBtn" type="button" title="تغيير القارئ" aria-label="تغيير القارئ">
+                        <i class="fas fa-microphone" aria-hidden="true"></i>
+                    </button>
                     <button class="audio-btn ap-ghost" id="apMoreBtn" type="button" aria-expanded="false" aria-controls="apMore" title="المزيد من عناصر التحكم" aria-label="المزيد من عناصر التحكم">
                         <i class="fas fa-ellipsis" aria-hidden="true"></i>
                     </button>
