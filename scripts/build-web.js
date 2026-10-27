@@ -31,6 +31,17 @@ if (fs.existsSync(iconsDir)) {
   }
 }
 
+// Stories/Miracles data (content/*.js is loaded by explore.js and precached by sw.js;
+// a missing file there makes the whole offline install fail).
+const contentDir = path.join(root, 'content');
+if (fs.existsSync(contentDir)) {
+  const outContentDir = path.join(outDir, 'content');
+  fs.mkdirSync(outContentDir, { recursive: true });
+  for (const name of fs.readdirSync(contentDir)) {
+    fs.copyFileSync(path.join(contentDir, name), path.join(outContentDir, name));
+  }
+}
+
 // SEO files — irrelevant inside the Android/iOS app shell, but www/ is also
 // the build output for the live website, which does need them.
 for (const name of ['robots.txt', 'sitemap.xml']) {

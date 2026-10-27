@@ -93,6 +93,7 @@
                     <li><a class="nav-link active" data-page="home">الرئيسية</a></li>
                     <li><a class="nav-link" data-page="surah">القراءة</a></li>
                     <li><a class="nav-link" data-page="mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" data-page="explore">استكشف</a></li>
                     <li><a class="nav-link" data-page="playlists">القوائم</a></li>
                     <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
                     <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
@@ -127,6 +128,18 @@
                     <h1>القرآن الكريم</h1>
                     <p class="text-lg" style="color: var(--color-text-gray);">114 سورة</p>
                 </div>
+
+                <!-- Entry to the Explore page -->
+                <button type="button" class="hx-teaser" data-page-go="explore">
+                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-kaaba"></i><i class="fas fa-book-open-reader"></i><i class="fas fa-star-and-crescent"></i></span>
+                    <span class="hx-teaser-text">
+                        <strong>استكشف القرآن الكريم</strong>
+                        <span>السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
+                    </span>
+                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                </button>
+
+                <h2 class="hx-block-title hx-index-title">فهرس المصحف</h2>
 
                 <!-- Navigation Tabs -->
                 <div class="flex items-center justify-center gap-4 mt-4 mb-4">
@@ -474,6 +487,8 @@
     <script src="digital-mushaf.js"></script>
     <script src="playlists-ui.js"></script>
     <script src="downloads-ui.js"></script>
+    <script src="player-views.js"></script>
+    <script src="explore.js"></script>
 </body>
 
 </html>
