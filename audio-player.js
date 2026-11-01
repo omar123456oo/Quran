@@ -342,6 +342,11 @@ const AudioPlayer = {
     },
 
     safePlay() {
+        if (typeof window !== 'undefined' && window.RadioService && typeof window.RadioService.pause === 'function') {
+            if (window.RadioService.isPlaying()) {
+                window.RadioService.pause(false);
+            }
+        }
         const p = this.audio.play();
         if (p && p.catch) {
             p.catch((err) => {

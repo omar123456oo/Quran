@@ -57,6 +57,7 @@
     <link rel="stylesheet" href="player-styles.css">
     <link rel="stylesheet" href="offline-reader.css">
     <link rel="stylesheet" href="home-experience.css">
+    <link rel="stylesheet" href="radio.css">
 
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
@@ -70,7 +71,7 @@
                 <div class="logo-icon">
                     <i class="fas fa-book-quran"></i>
                 </div>
-                <span>القرآن الكريم</span>
+                <span data-i18n="logo">القرآن الكريم</span>
             </a>
 
             <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
@@ -79,28 +80,34 @@
 
             <div class="search-bar">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" id="searchInput" placeholder="بحث في القرآن الكريم...">
+                <input type="text" class="search-input" id="searchInput" placeholder="بحث في القرآن الكريم..." data-i18n-placeholder="search_placeholder">
             </div>
 
             <nav class="nav">
                 <div class="mobile-menu-header" style="display: none;">
                     <button class="mobile-menu-close" id="mobileMenuClose" aria-label="Close menu">
                         <i class="fas fa-times"></i>
-                        <span>إغلاق</span>
+                        <span data-i18n="close">إغلاق</span>
                     </button>
                 </div>
                 <ul class="nav-links">
-                    <li><a class="nav-link active" data-page="home">الرئيسية</a></li>
-                    <li><a class="nav-link" data-page="surah">القراءة</a></li>
-                    <li><a class="nav-link" data-page="mushaf">المصحف القارئ</a></li>
-                    <li><a class="nav-link" data-page="explore">استكشف</a></li>
-                    <li><a class="nav-link" data-page="playlists">القوائم</a></li>
-                    <li><a class="nav-link" data-page="adhkar">الأذكار</a></li>
-                    <li><a class="nav-link" data-page="bookmarks">المحفوظات</a></li>
-                    <li><a class="nav-link" data-page="downloads">التنزيلات</a></li>
-                    <li><a class="nav-link" data-page="resources">المصادر</a></li>
-                    <li><a class="nav-link" data-page="settings">الإعدادات</a></li>
+                    <li><a class="nav-link active" data-page="home" data-i18n="nav.home">الرئيسية</a></li>
+                    <li><a class="nav-link" data-page="surah" data-i18n="nav.surah">القراءة</a></li>
+                    <li><a class="nav-link" data-page="mushaf" data-i18n="nav.mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" data-page="radio" data-i18n="nav.radio">الإذاعة</a></li>
+                    <li><a class="nav-link" data-page="explore" data-i18n="nav.explore">استكشف</a></li>
+                    <li><a class="nav-link" data-page="playlists" data-i18n="nav.playlists">القوائم</a></li>
+                    <li><a class="nav-link" data-page="adhkar" data-i18n="nav.adhkar">الأذكار</a></li>
+                    <li><a class="nav-link" data-page="bookmarks" data-i18n="nav.bookmarks">المحفوظات</a></li>
+                    <li><a class="nav-link" data-page="downloads" data-i18n="nav.downloads">التنزيلات</a></li>
+                    <li><a class="nav-link" data-page="resources" data-i18n="nav.resources">المصادر</a></li>
+                    <li><a class="nav-link" data-page="settings" data-i18n="nav.settings">الإعدادات</a></li>
                 </ul>
+
+                <button class="btn-icon lang-toggle-btn" id="langToggle" title="English / العربية" aria-label="Toggle language">
+                    <i class="fas fa-language" aria-hidden="true"></i>
+                    <span id="langLabel" class="lang-label">EN</span>
+                </button>
 
                 <button class="btn-icon" id="themeToggle" title="تبديل الوضع">
                     <i class="fas fa-moon"></i>
@@ -125,27 +132,37 @@
             <!-- Home Page (Surah List) -->
             <div id="homePage" class="page active">
                 <div class="page-header text-center">
-                    <h1>القرآن الكريم</h1>
-                    <p class="text-lg" style="color: var(--color-text-gray);">114 سورة</p>
+                    <h1 data-i18n="home.title">القرآن الكريم</h1>
+                    <p class="text-lg" style="color: var(--color-text-gray);" data-i18n="home.surah_count">114 سورة</p>
                 </div>
 
                 <!-- Entry to the Explore page -->
                 <button type="button" class="hx-teaser" data-page-go="explore">
                     <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-kaaba"></i><i class="fas fa-book-open-reader"></i><i class="fas fa-star-and-crescent"></i></span>
                     <span class="hx-teaser-text">
-                        <strong>استكشف القرآن الكريم</strong>
-                        <span>السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
+                        <strong data-i18n="home.explore_title">استكشف القرآن الكريم</strong>
+                        <span data-i18n="home.explore_desc">السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
                     </span>
                     <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
                 </button>
 
-                <h2 class="hx-block-title hx-index-title">فهرس المصحف</h2>
+                <!-- Entry to Quran Radio -->
+                <button type="button" class="hx-teaser hx-radio-teaser" data-page-go="radio">
+                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-radio"></i><i class="fas fa-tower-broadcast"></i><i class="fas fa-volume-high"></i></span>
+                    <span class="hx-teaser-text">
+                        <strong><span data-i18n="home.radio_title">الإذاعة القرآنية المباركة</span> <span class="hx-radio-badge"><i class="fas fa-circle" style="font-size: 8px;"></i> <span data-i18n="home.radio_live">مباشر</span></span></strong>
+                        <span data-i18n="home.radio_desc">بث حي متواصل لأعذب التلاوات القرآنية بأصوات نخبة من كبار القراء</span>
+                    </span>
+                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                </button>
+
+                <h2 class="hx-block-title hx-index-title" data-i18n="home.index_title">فهرس المصحف</h2>
 
                 <!-- Navigation Tabs -->
                 <div class="flex items-center justify-center gap-4 mt-4 mb-4">
-                    <button class="btn btn-secondary active" id="surahTab">السور</button>
-                    <button class="btn btn-secondary" id="juzTab">الأجزاء</button>
-                    <button class="btn btn-secondary" id="pageTab">الصفحات</button>
+                    <button class="btn btn-secondary active" id="surahTab" data-i18n="home.tab_surahs">السور</button>
+                    <button class="btn btn-secondary" id="juzTab" data-i18n="home.tab_juzs">الأجزاء</button>
+                    <button class="btn btn-secondary" id="pageTab" data-i18n="home.tab_pages">الصفحات</button>
                 </div>
 
                 <div id="surahList" class="surah-grid">
@@ -172,6 +189,11 @@
                 <div id="surahContent">
                     <!-- Surah content will be loaded here -->
                 </div>
+            </div>
+
+            <!-- Quran Radio Page -->
+            <div id="radioPage" class="page hidden">
+                <!-- Radio content loaded dynamically by RadioUI -->
             </div>
 
             <!-- Playlists & Queue Page -->
@@ -428,7 +450,7 @@
         <div class="modal-content">
             <div class="flex items-center justify-between mb-4">
                 <h3>التفسير</h3>
-                <button class="btn-icon" id="closeTafseerModal">
+                <button class="btn-icon" id="closeTafseerModal" type="button">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -471,6 +493,7 @@
     <script src="offline-audio.js"></script>
     <script src="mushaf-store.js"></script>
     <script src="api-service.js"></script>
+    <script src="i18n.js"></script>
     <script src="app.js"></script>
     <script src="quran-display.js"></script>
     <script src="play-queue.js"></script>
@@ -489,6 +512,9 @@
     <script src="downloads-ui.js"></script>
     <script src="player-views.js"></script>
     <script src="explore.js"></script>
+    <script src="radio-stations.js"></script>
+    <script src="radio-service.js"></script>
+    <script src="radio-ui.js"></script>
 </body>
 
 </html>

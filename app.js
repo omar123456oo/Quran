@@ -20,6 +20,9 @@ const App = {
         // Apply theme
         this.applyTheme();
 
+        // Apply language
+        this.applyLanguage();
+
         // Setup event listeners
         this.setupEventListeners();
 
@@ -149,6 +152,7 @@ const App = {
     loadSettings() {
         const defaultSettings = {
             theme: 'light',
+            language: 'ar',
             fontSize: 'medium',
             arabicFont: 'amiri',
             defaultReciter: 'ar.alafasy',
@@ -199,9 +203,43 @@ const App = {
     },
 
     /**
+     * Apply language (AR or EN)
+     */
+    applyLanguage() {
+        const lang = (this.settings && this.settings.language) || 'ar';
+        if (typeof I18n !== 'undefined') {
+            I18n.init(lang);
+        } else {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+    },
+
+    /**
+     * Toggle between Arabic and English
+     */
+    toggleLanguage() {
+        if (typeof I18n !== 'undefined') {
+            I18n.toggleLanguage();
+            this.settings.language = I18n.getLanguage();
+        } else {
+            this.settings.language = this.settings.language === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = this.settings.language;
+            document.documentElement.dir = this.settings.language === 'ar' ? 'rtl' : 'ltr';
+            this.saveSettings();
+        }
+    },
+
+    /**
      * Setup event listeners
      */
     setupEventListeners() {
+        // Language toggle
+        const langToggle = document.getElementById('langToggle');
+        if (langToggle) {
+            langToggle.addEventListener('click', () => this.toggleLanguage());
+        }
+
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
@@ -300,6 +338,10 @@ const App = {
         if (typeof Explore !== 'undefined') {
             Explore.init();
         }
+
+        if (typeof RadioUI !== 'undefined') {
+            RadioUI.init();
+        }
     },
 
     /**
@@ -374,12 +416,19 @@ const App = {
             case 'downloads':
                 if (typeof Downloads !== 'undefined') Downloads.show();
                 break;
+            case 'radio':
+                if (typeof RadioUI !== 'undefined') RadioUI.show();
+                break;
             case 'resources':
                 IslamicResources.loadResources();
                 break;
             case 'settings':
                 Settings.loadSettings();
                 break;
+        }
+
+        if (typeof RadioUI !== 'undefined' && typeof RadioService !== 'undefined' && RadioService.initialized) {
+            RadioUI.renderMiniPlayer(RadioService.getSnapshot());
         }
     },
 
