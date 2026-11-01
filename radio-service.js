@@ -2,7 +2,7 @@
  * Quran Radio Service
  * Centralized audio engine for live Quran radio streaming.
  * Coordinates with the existing recitation audio player, manages state,
- * handles bounded reconnections, and updates Media Session.
+ * handles bounded reconnections, fallback URLs, mute/volume, and Media Session.
  */
 (function (root, factory) {
     if (typeof module === 'object' && module.exports) {
@@ -16,7 +16,8 @@
 
     const STORAGE_KEY = 'quran_radio_prefs_v1';
     const MAX_RETRIES = 4;
-    const RETRY_DELAYS = [1000, 2000, 4000, 8000];
+    const RETRY_DELAYS = [800, 2000, 4000, 8000];
+    const CONNECTION_TIMEOUT_MS = 12000;
 
     const RadioService = {
         audio: null,
@@ -24,11 +25,16 @@
         state: 'idle', // idle | loading | playing | paused | reconnecting | error
         errorMessage: '',
         retryCount: 0,
+        fallbackIndex: 0,
         retryTimer: null,
+        connectTimeoutTimer: null,
         volume: 0.8,
+        muted: false,
         miniPlayerVisible: true,
+        wasPlayingBeforeOffline: false,
         listeners: new Set(),
         initialized: false,
+        networkListenersBound: false,
 
         /* ------------------------------------------------------------ init */
         init(options = {}) {
@@ -58,10 +64,15 @@
             }
 
             this.volume = 0.8;
+            this.muted = false;
+            this.station = null;
             this.state = 'idle';
             this.errorMessage = '';
             this.retryCount = 0;
+            this.fallbackIndex = 0;
+            this.wasPlayingBeforeOffline = false;
             this.clearRetryTimer();
+            this.clearConnectTimeout();
 
             this.loadPreferences();
 
@@ -69,7 +80,8 @@
             if (options.audio || typeof Audio !== 'undefined') {
                 this.audio = options.audio || new Audio();
                 this.audio.preload = 'none';
-                this.audio.volume = this.volume;
+                this.audio.volume = this.muted ? 0 : this.volume;
+                this.audio.muted = this.muted;
                 this.setupAudioListeners();
             }
 
@@ -79,6 +91,7 @@
             }
 
             this.setupRecitationCoordination();
+            this.setupNetworkListeners();
             this.initialized = true;
             this.notify();
         },
@@ -94,6 +107,9 @@
                     if (typeof prefs.volume === 'number' && prefs.volume >= 0 && prefs.volume <= 1) {
                         this.volume = prefs.volume;
                     }
+                    if (typeof prefs.muted === 'boolean') {
+                        this.muted = prefs.muted;
+                    }
                     if (typeof prefs.miniPlayerVisible === 'boolean') {
                         this.miniPlayerVisible = prefs.miniPlayerVisible;
                     }
@@ -103,7 +119,7 @@
                     }
                 }
             } catch (e) {
-                console.warn('Could not load radio preferences', e);
+                // Ignore corrupted storage
             }
         },
 
@@ -113,6 +129,7 @@
                 const prefs = {
                     version: 1,
                     volume: this.volume,
+                    muted: this.muted,
                     miniPlayerVisible: this.miniPlayerVisible,
                     lastStationId: this.station ? this.station.id : null
                 };
@@ -127,6 +144,7 @@
             if (!this.audio) return;
 
             this.audio.addEventListener('playing', () => {
+                this.clearConnectTimeout();
                 this.clearRetry();
                 this.setState('playing');
                 this.updateMediaSession();
@@ -138,28 +156,63 @@
                 }
             });
 
+            this.audio.addEventListener('stalled', () => {
+                if (this.state === 'playing') {
+                    this.setState('loading', 'ضعف في تدفق البيانات، جارٍ الاستئناف…');
+                }
+            });
+
             this.audio.addEventListener('pause', () => {
+                this.clearConnectTimeout();
                 // If paused intentionally and not transitioning or erroring
-                if (this.state !== 'loading' && this.state !== 'reconnecting' && this.state !== 'error') {
+                if (this.state !== 'loading' && this.state !== 'reconnecting' && this.state !== 'error' && this.state !== 'idle') {
                     this.setState('paused');
                     this.updateMediaSession();
                 }
             });
 
-            this.audio.addEventListener('error', (e) => {
+            this.audio.addEventListener('error', () => {
+                this.clearConnectTimeout();
                 const mediaError = this.audio && this.audio.error ? this.audio.error.code : 0;
                 let msg = 'تعذر تشغيل البث المباشر. يرجى التحقق من الاتصال بالإنترنت.';
                 if (mediaError === 2) msg = 'خطأ في شبكة الاتصال أثناء تحميل البث.';
                 if (mediaError === 3) msg = 'خطأ في فك تشفير الصوت للبث المباشر.';
-                if (mediaError === 4) msg = 'صيغة البث غير مدعومة أو الرابط غير متاح حاليًا.';
+                if (mediaError === 4) msg = 'صيغة البث غير مدعومة أو المصدر غير متاح حاليًا.';
 
-                console.warn('Radio audio error encountered:', mediaError, e);
                 this.handleStreamFailure(msg);
             });
 
             this.audio.addEventListener('ended', () => {
+                this.clearConnectTimeout();
                 // Live stream ended unexpectedly; treat as stream interruption
                 this.handleStreamFailure('انقطع البث المباشر من المصدر.');
+            });
+        },
+
+        /* ------------------------------------------------ network listeners */
+        setupNetworkListeners() {
+            if (this.networkListenersBound || typeof window === 'undefined' || typeof window.addEventListener !== 'function') {
+                return;
+            }
+            this.networkListenersBound = true;
+
+            window.addEventListener('offline', () => {
+                if (this.isPlaying() || this.state === 'loading' || this.state === 'reconnecting') {
+                    this.wasPlayingBeforeOffline = true;
+                    this.cancelRetry();
+                    this.clearConnectTimeout();
+                    if (this.audio) {
+                        try { this.audio.pause(); } catch (e) {}
+                    }
+                    this.setState('error', 'انقطع الاتصال بالإنترنت. سيعود البث تلقائيًا عند استعادة الشبكة.');
+                }
+            });
+
+            window.addEventListener('online', () => {
+                if (this.wasPlayingBeforeOffline || this.state === 'reconnecting' || this.state === 'error') {
+                    this.wasPlayingBeforeOffline = false;
+                    this.retry();
+                }
             });
         },
 
@@ -170,7 +223,7 @@
                 ps.subscribe((state, keys) => {
                     if (keys.includes('status')) {
                         const recStatus = state.status;
-                        if ((recStatus === 'playing' || recStatus === 'buffering') && this.isPlaying()) {
+                        if ((recStatus === 'playing' || recStatus === 'buffering') && (this.isPlaying() || this.state === 'loading' || this.state === 'reconnecting')) {
                             this.pause(false);
                         }
                     }
@@ -190,6 +243,7 @@
 
             const wasPlaying = this.isPlaying();
             this.cancelRetry();
+            this.clearConnectTimeout();
 
             if (this.audio) {
                 try {
@@ -201,6 +255,7 @@
 
             this.station = target;
             this.retryCount = 0;
+            this.fallbackIndex = 0;
             this.savePreferences();
 
             if (autoPlay || wasPlaying) {
@@ -227,7 +282,8 @@
             }
 
             this.cancelRetry();
-            this.setState('loading', 'جارٍ الاتصال بالإذاعة…');
+            this.clearConnectTimeout();
+            this.setState('loading', 'جارٍ الاتصال بالبث المباشر…');
 
             if (!this.audio) {
                 this.setState('playing');
@@ -240,26 +296,30 @@
                 this.audio.src = streamUrl;
             }
 
+            this.startConnectTimeout();
+
             try {
                 const playPromise = this.audio.play();
                 if (playPromise !== undefined) {
                     await playPromise;
                 }
             } catch (err) {
+                this.clearConnectTimeout();
                 if (err && err.name === 'NotAllowedError') {
                     // Browser Autoplay Policy blocked
                     this.setState('paused', 'اضغط زر التشغيل لبدء الاستماع');
                 } else if (err && err.name === 'AbortError') {
                     // Play request was interrupted by another action; benign
                 } else {
-                    console.warn('audio.play() failed:', err);
-                    this.handleStreamFailure('تعذر تشغيل الصوت. اضغط إعادة المحاولة.');
+                    this.handleStreamFailure('تعذر تشغيل الصوت. جارٍ محاولة الاتصال مجددًا…');
                 }
             }
         },
 
         pause(userInitiated = true) {
             this.cancelRetry();
+            this.clearConnectTimeout();
+            this.wasPlayingBeforeOffline = false;
             if (this.audio) {
                 try {
                     this.audio.pause();
@@ -273,6 +333,8 @@
 
         stop() {
             this.cancelRetry();
+            this.clearConnectTimeout();
+            this.wasPlayingBeforeOffline = false;
             if (this.audio) {
                 try {
                     this.audio.pause();
@@ -296,10 +358,30 @@
             const num = Math.max(0, Math.min(1, Number(value)));
             if (Number.isFinite(num)) {
                 this.volume = num;
-                if (this.audio) this.audio.volume = num;
+                if (num > 0 && this.muted) {
+                    this.muted = false;
+                }
+                if (this.audio) {
+                    this.audio.volume = this.muted ? 0 : num;
+                    this.audio.muted = this.muted;
+                }
                 this.savePreferences();
                 this.notify();
             }
+        },
+
+        setMuted(muted) {
+            this.muted = !!muted;
+            if (this.audio) {
+                this.audio.muted = this.muted;
+                this.audio.volume = this.muted ? 0 : this.volume;
+            }
+            this.savePreferences();
+            this.notify();
+        },
+
+        toggleMute() {
+            this.setMuted(!this.muted);
         },
 
         setMiniPlayerVisible(visible) {
@@ -327,10 +409,38 @@
         },
 
         /* ---------------------------------------------------- retry logic */
+        startConnectTimeout() {
+            this.clearConnectTimeout();
+            if (typeof setTimeout === 'undefined') return;
+            this.connectTimeoutTimer = setTimeout(() => {
+                if (this.state === 'loading') {
+                    this.handleStreamFailure('انتهت مهلة الاتصال بالخادم.');
+                }
+            }, CONNECTION_TIMEOUT_MS);
+            if (this.connectTimeoutTimer && typeof this.connectTimeoutTimer.unref === 'function') {
+                this.connectTimeoutTimer.unref();
+            }
+        },
+
+        clearConnectTimeout() {
+            if (this.connectTimeoutTimer) {
+                clearTimeout(this.connectTimeoutTimer);
+                this.connectTimeoutTimer = null;
+            }
+        },
+
         handleStreamFailure(msg) {
+            this.clearConnectTimeout();
             if (this.retryCount < MAX_RETRIES) {
                 const delay = RETRY_DELAYS[this.retryCount] || 5000;
                 this.retryCount++;
+
+                // Advance fallback stream URL if the station defines alternates
+                if (this.station && Array.isArray(this.station.fallbackUrls) && this.station.fallbackUrls.length > 0) {
+                    const totalUrls = 1 + this.station.fallbackUrls.length;
+                    this.fallbackIndex = (this.fallbackIndex + 1) % totalUrls;
+                }
+
                 this.setState('reconnecting', `انقطع الاتصال. جارٍ إعادة المحاولة (${this.retryCount}/${MAX_RETRIES})…`);
 
                 this.clearRetryTimer();
@@ -339,14 +449,18 @@
                         if (this.audio) {
                             try {
                                 this.audio.src = this.getStreamUrl();
+                                this.startConnectTimeout();
                                 this.audio.play().catch(() => {});
                             } catch (e) {}
                         }
                     }
                 }, delay);
+                if (this.retryTimer && typeof this.retryTimer.unref === 'function') {
+                    this.retryTimer.unref();
+                }
             } else {
                 this.clearRetry();
-                this.setState('error', msg || 'تعذر تشغيل الإذاعة بعد عدة محاولات. يرجى تجربة محطة أخرى.');
+                this.setState('error', msg || 'تعذر تشغيل الإذاعة بعد عدة محاولات. يرجى تجربة محطة أخرى أو إعادة المحاولة.');
             }
         },
 
@@ -372,11 +486,21 @@
             }
         },
 
-        getStreamUrl() {
+        getActiveBaseUrl() {
             if (!this.station) return '';
+            if (this.fallbackIndex > 0 && Array.isArray(this.station.fallbackUrls)) {
+                const candidate = this.station.fallbackUrls[this.fallbackIndex - 1];
+                if (candidate) return candidate;
+            }
+            return this.station.streamUrl;
+        },
+
+        getStreamUrl() {
+            const baseUrl = this.getActiveBaseUrl();
+            if (!baseUrl) return '';
             // Append cache busting parameter so live streams reconnect to fresh chunk/socket
-            const sep = this.station.streamUrl.includes('?') ? '&' : '?';
-            return `${this.station.streamUrl}${sep}_t=${Date.now()}`;
+            const sep = baseUrl.includes('?') ? '&' : '?';
+            return `${baseUrl}${sep}_t=${Date.now()}`;
         },
 
         /* -------------------------------------------------- state management */
@@ -404,8 +528,8 @@
             try {
                 navigator.mediaSession.metadata = new MediaMetadata({
                     title: this.station.name,
-                    artist: 'الإذاعة القرآنية المباركة',
-                    album: this.station.description || 'بث مباشر',
+                    artist: 'إذاعة القرآن الكريم من القاهرة',
+                    album: this.station.description || 'بث مباشر على مدار الساعة',
                     artwork: [
                         { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
                         { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' }
@@ -463,7 +587,9 @@
                 station: this.station,
                 errorMessage: this.errorMessage,
                 retryCount: this.retryCount,
+                fallbackIndex: this.fallbackIndex,
                 volume: this.volume,
+                muted: this.muted,
                 miniPlayerVisible: this.miniPlayerVisible,
                 isPlaying: this.isPlaying()
             };

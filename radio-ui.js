@@ -1,7 +1,7 @@
 /**
  * Quran Radio UI Controller
  * Manages the dedicated Radio screen, station grid, filtering,
- * and persistent Radio Mini-Player.
+ * animated visualizer, mute/reconnect controls, and persistent Radio Mini-Player.
  */
 (function (root, factory) {
     if (typeof module === 'object' && module.exports) {
@@ -62,14 +62,14 @@
             mini.className = 'radio-mini';
             mini.id = 'radioMini';
             mini.setAttribute('role', 'region');
-            mini.setAttribute('aria-label', 'مشغّل الإذاعة القرآنية المصغّر');
+            mini.setAttribute('aria-label', 'مشغّل إذاعة القرآن الكريم المصغّر');
             mini.hidden = true;
 
             mini.innerHTML = `
-                <button type="button" class="radio-mini-main" id="radioMiniOpenBtn" aria-label="فتح صفحة الإذاعة القرآنية">
-                    <span class="radio-mini-thumb" aria-hidden="true"><i class="fas fa-radio"></i></span>
+                <button type="button" class="radio-mini-main" id="radioMiniOpenBtn" aria-label="فتح صفحة إذاعة القرآن الكريم">
+                    <span class="radio-mini-thumb" aria-hidden="true"><i class="fas fa-tower-broadcast"></i></span>
                     <span class="radio-mini-text">
-                        <span class="radio-mini-title" id="radioMiniTitle">الإذاعة القرآنية</span>
+                        <span class="radio-mini-title" id="radioMiniTitle">إذاعة القرآن الكريم من القاهرة</span>
                         <span class="radio-mini-sub" id="radioMiniSub">
                             <span class="radio-live-dot" aria-hidden="true"></span>
                             <span id="radioMiniStatus">بث مباشر</span>
@@ -78,6 +78,9 @@
                 </button>
                 <button type="button" class="radio-mini-btn play-btn" id="radioMiniPlayBtn" aria-label="تشغيل الإذاعة" title="تشغيل">
                     <i class="fas fa-play" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="radio-mini-btn" id="radioMiniMuteBtn" aria-label="كتم الصوت" title="كتم الصوت">
+                    <i class="fas fa-volume-up" aria-hidden="true"></i>
                 </button>
                 <button type="button" class="radio-mini-btn" id="radioMiniExpandBtn" aria-label="فتح صفحة الإذاعة" title="تكبير">
                     <i class="fas fa-chevron-up" aria-hidden="true"></i>
@@ -104,12 +107,20 @@
                 if (RadioService) RadioService.togglePlay();
             });
 
+            document.getElementById('radioMiniMuteBtn')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (RadioService) RadioService.toggleMute();
+            });
+
             document.getElementById('radioMiniCloseBtn')?.addEventListener('click', (e) => {
                 e.stopPropagation();
                 if (RadioService) {
                     RadioService.setMiniPlayerVisible(false);
                     if (App && typeof App.showToast === 'function') {
-                        App.showToast('تم إخفاء المشغل المصغر (البث مستمر في الخلفية)', 'info');
+                        const msg = typeof I18n !== 'undefined'
+                            ? I18n.t('radio.mini_toast', 'تم إخفاء المشغل المصغر (البث مستمر في الخلفية)')
+                            : 'تم إخفاء المشغل المصغر (البث مستمر في الخلفية)';
+                        App.showToast(msg, 'info');
                     }
                 }
             });
@@ -151,9 +162,15 @@
                     return;
                 }
 
-                const retryBtn = e.target.closest('#radioRetryBtn');
-                if (retryBtn) {
+                const reconnectBtn = e.target.closest('#radioReconnectBtn, #radioRetryBtn');
+                if (reconnectBtn) {
                     if (RadioService) RadioService.retry();
+                    return;
+                }
+
+                const muteBtn = e.target.closest('#radioMuteBtn');
+                if (muteBtn) {
+                    if (RadioService) RadioService.toggleMute();
                     return;
                 }
 
@@ -201,7 +218,7 @@
             page.innerHTML = `
                 <div class="radio-page-container">
                     <header class="page-header text-center">
-                        <h1>${t('radio.header_title', 'الإذاعة القرآنية المباركة')}</h1>
+                        <h1>${t('radio.header_title', 'إذاعة القرآن الكريم من القاهرة')}</h1>
                         <p class="text-lg" style="color: var(--color-text-gray);">${t('radio.header_subtitle', 'بث مباشر ومتواصل لأعذب التلاوات القرآنية على مدار الساعة')}</p>
                     </header>
 
@@ -219,36 +236,50 @@
                         </div>
 
                         <div class="radio-art-container" id="radioArt">
-                            <i class="fas fa-radio" aria-hidden="true"></i>
+                            <i class="fas fa-tower-broadcast" id="radioArtIcon" aria-hidden="true"></i>
                         </div>
 
                         <div class="radio-meta">
-                            <h2 class="radio-station-title" id="radioHeroTitle">إذاعة تراتيل قصيرة</h2>
-                            <p class="radio-station-desc" id="radioHeroDesc">تلاوات خاشعة ومختارة بعناية لأعذب الأصوات</p>
+                            <h2 class="radio-station-title" id="radioHeroTitle">إذاعة القرآن الكريم من القاهرة</h2>
+                            <p class="radio-station-desc" id="radioHeroDesc">البث المباشر لإذاعة القرآن الكريم من القاهرة — تلاوات كبار قراء مصر والعالم الإسلامي على مدار الساعة</p>
+                        </div>
+
+                        <!-- Animated Audio Soundwave Visualization -->
+                        <div class="radio-wave-visualizer" id="radioWaveVisualizer" aria-hidden="true">
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                            <span></span><span></span><span></span><span></span><span></span><span></span>
+                            <span></span><span></span><span></span><span></span>
                         </div>
 
                         <div class="radio-status-banner" id="radioStatusBanner" role="status" aria-live="polite">
-                            <span id="radioStatusText">${t('radio.ready', 'جاهز للاستماع')}</span>
+                            <span class="radio-status-dot" id="radioStatusDot" aria-hidden="true"></span>
+                            <span id="radioStatusText">${t('radio.ready', 'جاهز للاستماع — اضغط تشغيل لبدء البث المباشر')}</span>
                             <button type="button" class="radio-retry-btn" id="radioRetryBtn" hidden>
-                                <i class="fas fa-rotate-right"></i> ${t('radio.retry', 'إعادة المحاولة')}
+                                <i class="fas fa-rotate-right"></i> ${t('radio.retry', 'إعادة الاتصال')}
                             </button>
                         </div>
 
                         <div class="radio-controls">
-                            <button type="button" class="radio-btn-round" id="radioHeroPrevBtn" aria-label="المحطة السابقة" title="المحطة السابقة">
+                            <button type="button" class="radio-btn-round" id="radioHeroPrevBtn" aria-label="${t('radio.prev_station', 'المحطة السابقة')}" title="${t('radio.prev_station', 'المحطة السابقة')}">
                                 <i class="fas fa-forward-step" aria-hidden="true"></i>
                             </button>
                             <button type="button" class="radio-btn-play" id="radioHeroPlayBtn" aria-label="تشغيل الإذاعة" title="تشغيل">
                                 <i class="fas fa-play" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="radio-btn-round" id="radioHeroNextBtn" aria-label="المحطة التالية" title="المحطة التالية">
+                            <button type="button" class="radio-btn-round" id="radioHeroNextBtn" aria-label="${t('radio.next_station', 'المحطة التالية')}" title="${t('radio.next_station', 'المحطة التالية')}">
                                 <i class="fas fa-backward-step" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="radio-btn-round" id="radioReconnectBtn" aria-label="${t('radio.reconnect', 'إعادة الاتصال بالبث')}" title="${t('radio.reconnect', 'إعادة الاتصال بالبث')}">
+                                <i class="fas fa-rotate-right" aria-hidden="true"></i>
                             </button>
                         </div>
 
                         <div class="radio-volume-row">
-                            <i class="fas fa-volume-up" aria-hidden="true"></i>
+                            <button type="button" class="radio-mute-btn" id="radioMuteBtn" aria-label="${t('radio.mute', 'كتم الصوت')}" title="${t('radio.mute', 'كتم الصوت')}">
+                                <i class="fas fa-volume-up" id="radioMuteIcon" aria-hidden="true"></i>
+                            </button>
                             <input type="range" id="radioVolumeSlider" min="0" max="100" value="80" aria-label="مستوى صوت الإذاعة">
+                            <span class="radio-volume-pct" id="radioVolumePct">80%</span>
                         </div>
                     </section>
 
@@ -261,8 +292,8 @@
 
                         <div class="radio-cat-tabs" id="radioCatTabs" role="tablist" aria-label="أقسام الإذاعات">
                             <button type="button" class="radio-tab-btn active" data-radio-cat="all" role="tab" aria-selected="true">${t('radio.tab_all', 'الكل')}</button>
+                            <button type="button" class="radio-tab-btn" data-radio-cat="thematic" role="tab" aria-selected="false">${t('radio.tab_thematic', 'البث العام والتلاوات')}</button>
                             <button type="button" class="radio-tab-btn" data-radio-cat="reciter" role="tab" aria-selected="false">${t('radio.tab_reciters', 'القراء')}</button>
-                            <button type="button" class="radio-tab-btn" data-radio-cat="thematic" role="tab" aria-selected="false">${t('radio.tab_thematic', 'تلاوات ومنوعات')}</button>
                         </div>
                     </section>
 
@@ -320,9 +351,11 @@
 
             grid.innerHTML = stations.map(s => {
                 const isActive = s.id === activeStationId;
-                const playIcon = isActive && isPlaying ? 'fa-pause' : (isActive && RadioService.state === 'loading' ? 'fa-spinner fa-spin' : 'fa-play');
+                const playIcon = isActive && isPlaying ? 'fa-pause' : (isActive && (RadioService.state === 'loading' || RadioService.state === 'reconnecting') ? 'fa-spinner fa-spin' : 'fa-play');
                 const title = isEn && s.nameEn ? s.nameEn : s.name;
-                const subtitle = isEn ? (s.category === 'reciter' ? 'Reciter Radio' : 'Selected Recitations') : (s.description || s.categoryName);
+                const subtitle = isEn
+                    ? (s.descriptionEn || (s.category === 'reciter' ? 'Reciter Radio' : 'Live Broadcast'))
+                    : (s.description || s.categoryName);
 
                 return `
                     <button type="button" class="radio-card ${isActive ? 'is-active' : ''}" data-station-id="${s.id}" role="listitem" aria-label="${title}">
@@ -345,7 +378,9 @@
         render(snapshot) {
             if (!snapshot) return;
 
-            const { state, station, errorMessage, volume, isPlaying, miniPlayerVisible } = snapshot;
+            const { state, station, errorMessage, volume, muted, isPlaying, miniPlayerVisible } = snapshot;
+            const isEn = typeof I18n !== 'undefined' && I18n.getLanguage() === 'en';
+            const t = (k, fb) => (typeof I18n !== 'undefined' ? I18n.t(k, fb) : fb);
 
             // Render Hero Section
             const hero = document.getElementById('radioHero');
@@ -357,8 +392,12 @@
             const retryBtn = document.getElementById('radioRetryBtn');
             const liveTag = document.getElementById('radioLiveTag');
             const volumeSlider = document.getElementById('radioVolumeSlider');
+            const volumePct = document.getElementById('radioVolumePct');
+            const muteBtn = document.getElementById('radioMuteBtn');
+            const muteIcon = document.getElementById('radioMuteIcon');
             const formatBadge = document.getElementById('radioFormatBadge');
             const art = document.getElementById('radioArt');
+            const artIcon = document.getElementById('radioArtIcon');
 
             if (hero) {
                 hero.classList.toggle('is-playing', isPlaying);
@@ -371,9 +410,10 @@
             }
 
             if (station) {
-                if (heroTitle) heroTitle.textContent = station.name;
-                if (heroDesc) heroDesc.textContent = station.description || '';
+                if (heroTitle) heroTitle.textContent = isEn && station.nameEn ? station.nameEn : station.name;
+                if (heroDesc) heroDesc.textContent = isEn && station.descriptionEn ? station.descriptionEn : (station.description || '');
                 if (formatBadge) formatBadge.textContent = `${station.format === 'audio/mpeg' ? 'MP3' : 'Audio'} · ${station.bitrate} kbps`;
+                if (artIcon) artIcon.className = `fas ${station.icon || 'fa-tower-broadcast'}`;
             }
 
             if (playBtn) {
@@ -383,7 +423,7 @@
                         ? 'fas fa-spinner fa-spin'
                         : (isPlaying ? 'fas fa-pause' : 'fas fa-play');
                 }
-                const label = isPlaying ? 'إيقاف مؤقت' : 'تشغيل';
+                const label = isPlaying ? t('player.pause', 'إيقاف مؤقت') : t('player.play', 'تشغيل');
                 playBtn.title = label;
                 playBtn.setAttribute('aria-label', label);
             }
@@ -391,19 +431,19 @@
             if (statusBanner && statusText) {
                 statusBanner.className = 'radio-status-banner';
                 if (state === 'playing') {
-                    statusText.textContent = 'البث المباشر يعمل الآن';
+                    statusText.textContent = t('radio.playing', 'البث المباشر متصل ويعمل الآن');
                     statusBanner.classList.add('is-playing');
                 } else if (state === 'loading') {
-                    statusText.textContent = errorMessage || 'جارٍ الاتصال بالإذاعة…';
+                    statusText.textContent = errorMessage || t('radio.loading', 'جارٍ الاتصال بالبث المباشر…');
                     statusBanner.classList.add('is-loading');
                 } else if (state === 'reconnecting') {
-                    statusText.textContent = errorMessage || 'جارٍ إعادة المحاولة…';
+                    statusText.textContent = errorMessage || t('radio.reconnecting', 'جارٍ إعادة الاتصال بالبث…');
                     statusBanner.classList.add('is-loading');
                 } else if (state === 'error') {
-                    statusText.textContent = errorMessage || 'تعذر الاتصال بالبث';
+                    statusText.textContent = errorMessage || t('radio.error', 'تعذر الاتصال بالبث المباشر');
                     statusBanner.classList.add('is-error');
                 } else {
-                    statusText.textContent = 'جاهز للاستماع';
+                    statusText.textContent = t('radio.ready', 'جاهز للاستماع — اضغط تشغيل لبدء البث المباشر');
                 }
 
                 if (retryBtn) {
@@ -411,8 +451,23 @@
                 }
             }
 
+            const effectiveVol = muted ? 0 : Math.round(volume * 100);
             if (volumeSlider) {
-                volumeSlider.value = String(Math.round(volume * 100));
+                volumeSlider.value = String(effectiveVol);
+            }
+            if (volumePct) {
+                volumePct.textContent = `${effectiveVol}%`;
+            }
+            if (muteIcon) {
+                muteIcon.className = muted || effectiveVol === 0
+                    ? 'fas fa-volume-xmark'
+                    : (effectiveVol < 50 ? 'fas fa-volume-low' : 'fas fa-volume-up');
+            }
+            if (muteBtn) {
+                const muteLabel = muted ? t('radio.unmute', 'إلغاء كتم الصوت') : t('radio.mute', 'كتم الصوت');
+                muteBtn.title = muteLabel;
+                muteBtn.setAttribute('aria-label', muteLabel);
+                muteBtn.classList.toggle('is-muted', !!muted);
             }
 
             // Update mini player
@@ -450,11 +505,13 @@
             const mini = document.getElementById('radioMini');
             if (!mini) return;
 
-            const { station, state, isPlaying, miniPlayerVisible } = snapshot;
+            const { station, state, muted, isPlaying, miniPlayerVisible } = snapshot;
             const onRadioPage = App && App.currentPage === 'radio';
+            const isEn = typeof I18n !== 'undefined' && I18n.getLanguage() === 'en';
+            const t = (k, fb) => (typeof I18n !== 'undefined' ? I18n.t(k, fb) : fb);
 
             // Show mini player if:
-            // 1. Radio is either playing, loading, reconnecting, or was started
+            // 1. Radio is either playing, loading, reconnecting, or paused after session start
             // 2. Not currently on the full radio page
             // 3. User hasn't dismissed it
             const shouldShow = (state === 'playing' || state === 'loading' || state === 'reconnecting' || state === 'paused')
@@ -471,16 +528,17 @@
             const titleEl = document.getElementById('radioMiniTitle');
             const subEl = document.getElementById('radioMiniStatus');
             const playBtn = document.getElementById('radioMiniPlayBtn');
+            const muteBtn = document.getElementById('radioMiniMuteBtn');
 
             if (titleEl && station) {
-                titleEl.textContent = station.name;
+                titleEl.textContent = isEn && station.nameEn ? station.nameEn : station.name;
             }
 
             if (subEl) {
-                subEl.textContent = state === 'playing' ? 'بث مباشر متواصل'
-                    : state === 'loading' ? 'جارٍ الاتصال…'
-                    : state === 'reconnecting' ? 'جارٍ إعادة الاتصال…'
-                    : state === 'error' ? 'تعذر الاتصال' : 'متوقف مؤقتًا';
+                subEl.textContent = state === 'playing' ? t('radio.mini_live', 'بث مباشر متواصل')
+                    : state === 'loading' ? t('radio.loading', 'جارٍ الاتصال…')
+                    : state === 'reconnecting' ? t('radio.reconnecting', 'جارٍ إعادة الاتصال…')
+                    : state === 'error' ? t('radio.error', 'تعذر الاتصال') : t('player.pause', 'متوقف مؤقتًا');
             }
 
             if (playBtn) {
@@ -490,13 +548,22 @@
                         ? 'fas fa-spinner fa-spin'
                         : (isPlaying ? 'fas fa-pause' : 'fas fa-play');
                 }
-                const label = isPlaying ? 'إيقاف مؤقت' : 'تشغيل';
+                const label = isPlaying ? t('player.pause', 'إيقاف مؤقت') : t('player.play', 'تشغيل');
                 playBtn.title = label;
                 playBtn.setAttribute('aria-label', label);
+            }
+
+            if (muteBtn) {
+                const icon = muteBtn.querySelector('i');
+                if (icon) {
+                    icon.className = muted ? 'fas fa-volume-xmark' : 'fas fa-volume-up';
+                }
+                const muteLabel = muted ? t('radio.unmute', 'إلغاء كتم الصوت') : t('radio.mute', 'كتم الصوت');
+                muteBtn.title = muteLabel;
+                muteBtn.setAttribute('aria-label', muteLabel);
             }
         }
     };
 
     return RadioUI;
 });
-

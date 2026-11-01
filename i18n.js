@@ -74,20 +74,25 @@
 
             // Radio Page
             radio: {
-                header_title: 'الإذاعة القرآنية المباركة',
+                header_title: 'إذاعة القرآن الكريم من القاهرة',
                 header_subtitle: 'بث مباشر ومتواصل لأعذب التلاوات القرآنية على مدار الساعة',
                 live: 'مباشر',
-                ready: 'جاهز للاستماع',
-                playing: 'البث المباشر يعمل الآن',
-                loading: 'جارٍ الاتصال بالإذاعة…',
-                reconnecting: 'جارٍ إعادة المحاولة…',
-                error: 'تعذر الاتصال بالبث',
-                retry: 'إعادة المحاولة',
+                ready: 'جاهز للاستماع — اضغط تشغيل لبدء البث المباشر',
+                playing: 'البث المباشر متصل ويعمل الآن',
+                loading: 'جارٍ الاتصال بالبث المباشر…',
+                reconnecting: 'جارٍ إعادة الاتصال بالبث…',
+                error: 'تعذر الاتصال بالبث المباشر',
+                retry: 'إعادة الاتصال',
+                reconnect: 'إعادة الاتصال بالبث',
+                mute: 'كتم الصوت',
+                unmute: 'إلغاء كتم الصوت',
+                prev_station: 'المحطة السابقة',
+                next_station: 'المحطة التالية',
                 search_placeholder: 'ابحث عن محطة أو قارئ…',
                 tab_all: 'الكل',
                 tab_reciters: 'القراء',
-                tab_thematic: 'تلاوات ومنوعات',
-                mini_title: 'الإذاعة القرآنية',
+                tab_thematic: 'البث العام والتلاوات',
+                mini_title: 'إذاعة القرآن الكريم من القاهرة',
                 mini_live: 'بث مباشر متواصل',
                 mini_hide: 'إخفاء المشغل',
                 mini_toast: 'تم إخفاء المشغل المصغر (البث مستمر في الخلفية)'
@@ -187,20 +192,25 @@
 
             // Radio Page
             radio: {
-                header_title: 'Holy Quran Radio',
-                header_subtitle: 'Continuous 24/7 live streaming of the Holy Quran',
+                header_title: 'Holy Quran Radio Cairo',
+                header_subtitle: 'Continuous 24/7 live broadcasting of the Holy Quran from Cairo & renowned reciters',
                 live: 'LIVE',
-                ready: 'Ready to play',
-                playing: 'Live stream playing',
-                loading: 'Connecting to stream…',
-                reconnecting: 'Reconnecting…',
-                error: 'Connection failed',
-                retry: 'Retry',
+                ready: 'Ready to play — Press play to start live stream',
+                playing: 'Connected · Live stream playing',
+                loading: 'Connecting to live stream…',
+                reconnecting: 'Reconnecting to stream…',
+                error: 'Stream connection failed',
+                retry: 'Reconnect',
+                reconnect: 'Reconnect stream',
+                mute: 'Mute',
+                unmute: 'Unmute',
+                prev_station: 'Previous Station',
+                next_station: 'Next Station',
                 search_placeholder: 'Search stations or reciters…',
                 tab_all: 'All',
                 tab_reciters: 'Reciters',
-                tab_thematic: 'Thematic Recitations',
-                mini_title: 'Quran Radio',
+                tab_thematic: 'General & Thematic',
+                mini_title: 'Holy Quran Radio Cairo',
                 mini_live: 'Live stream active',
                 mini_hide: 'Hide mini player',
                 mini_toast: 'Mini player hidden (audio continues playing)'
@@ -313,6 +323,9 @@
             // Re-render dependent dynamic components if available
             if (typeof RadioUI !== 'undefined' && RadioUI.initialized) {
                 RadioUI.renderPage();
+                if (typeof RadioService !== 'undefined') {
+                    RadioUI.render(RadioService.getSnapshot());
+                }
             }
             if (typeof QuranDisplay !== 'undefined' && QuranDisplay.surahs && QuranDisplay.surahs.length) {
                 QuranDisplay.displaySurahs(QuranDisplay.surahs);

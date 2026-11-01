@@ -77,34 +77,44 @@ The Quran Radio feature provides continuous, high-fidelity live streaming of the
 Each station in `radio-stations.js` conforms to the following schema:
 ```javascript
 {
-    id: 'tarateel',                     // Unique station identifier
-    name: 'إذاعة تراتيل قصيرة متميزة',  // Arabic display name
-    nameEn: 'Short Quranic Recitations',// English label
-    category: 'thematic',               // 'thematic' | 'reciter'
-    categoryName: 'منوعات وتلاوات',     // Arabic category label
-    streamUrl: 'https://...',           // Direct, verified stream URL
-    format: 'audio/mpeg',               // MIME type ('audio/mpeg' / 'audio/aac')
-    bitrate: 128,                       // Bitrate in kbps
-    description: '...',                 // Descriptive text
-    verified: true,                     // Operational verification status
-    icon: 'fa-book-open-reader'         // FontAwesome icon class
+    id: 'cairo_quran',                             // Unique station identifier
+    name: 'إذاعة القرآن الكريم من القاهرة',         // Arabic display name
+    nameEn: 'Holy Quran Radio Cairo',              // English display name
+    category: 'thematic',                          // 'thematic' | 'reciter'
+    categoryName: 'البث العام والتلاوات',            // Arabic category label
+    streamUrl: 'https://stream.radiojar.com/8s5u5tpdtwzuv', // Primary live broadcast URL
+    fallbackUrls: [                                // Verified failover streams if primary is blocked
+        'https://qurango.net/radio/mix',
+        'https://backup.qurango.net/radio/mix',
+        'https://qurango.net/radio/tarateel'
+    ],
+    format: 'audio/mpeg',                          // MIME type ('audio/mpeg' / 'audio/aac')
+    bitrate: 128,                                  // Bitrate in kbps
+    description: 'البث المباشر لإذاعة القرآن الكريم من القاهرة...',
+    descriptionEn: 'Live broadcast of Holy Quran Radio from Cairo...',
+    verified: true,                                // Operational verification status
+    icon: 'fa-tower-broadcast'                     // FontAwesome icon class
 }
 ```
 
-### Verified Live Stations
-The following stations are verified operational with HTTP/2 and CORS:
+### Verified Live Stations (23 Stations)
+- **إذاعة القرآن الكريم من القاهرة (Default)**: `https://stream.radiojar.com/8s5u5tpdtwzuv` (with automatic failover to `https://qurango.net/radio/mix` on networks blocking RadioJar)
+- **الإذاعة العامة للقرآن الكريم**: `https://qurango.net/radio/mix`
 - **تراتيل قصيرة متميزة**: `https://qurango.net/radio/tarateel`
-- **مشاري راشد العفاسي**: `https://qurango.net/radio/mishary_alafasi`
+- **إذاعة المختصر في التفسير**: `https://qurango.net/radio/mukhtasartafsir`
 - **عبد الباسط عبد الصمد (المجوّد)**: `https://qurango.net/radio/abdulbasit_abdulsamad_mojawwad`
 - **عبد الباسط عبد الصمد (المرتّل)**: `https://qurango.net/radio/abdulbasit_abdulsamad_warsh`
 - **محمد صديق المنشاوي (المجوّد)**: `https://qurango.net/radio/mohammed_siddiq_alminshawi_mojawwad`
 - **محمد صديق المنشاوي (المرتّل)**: `https://qurango.net/radio/mohammed_siddiq_alminshawi`
 - **محمود خليل الحصري**: `https://qurango.net/radio/mahmoud_khalil_alhussary`
+- **مصطفى إسماعيل**: `https://qurango.net/radio/mustafa_ismail`
+- **محمود علي البنا**: `https://qurango.net/radio/mahmoud_ali__albanna_mojawwad`
+- **محمد محمود الطبلاوي**: `https://qurango.net/radio/mohammad_altablaway`
+- **مشاري راشد العفاسي**: `https://qurango.net/radio/mishary_alafasi`
 - **أحمد بن علي العجمي**: `https://qurango.net/radio/ahmad_alajmy`
 - **سعود الشريم**: `https://qurango.net/radio/saud_alshuraim`
 - **عبد الرحمن السديس**: `https://qurango.net/radio/abdulrahman_alsudaes`
 - **ماهر المعيقلي**: `https://qurango.net/radio/maher_almuaiqly`
-- **محمود علي البنا**: `https://qurango.net/radio/mahmoud_ali__albanna_mojawwad`
 - **ياسر الدوسري**: `https://qurango.net/radio/yasser_aldosari`
 - **خالد الجليل**: `https://qurango.net/radio/khalid_aljileel`
 - **ناصر القطامي**: `https://qurango.net/radio/nasser_alqatami`

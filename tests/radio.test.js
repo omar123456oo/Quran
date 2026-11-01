@@ -85,7 +85,9 @@ test('radio stations: all stations have unique IDs, required fields, and valid f
 
     const defaultStation = RadioStations.getDefault();
     assert.ok(defaultStation, 'Must provide a default station');
-    assert.equal(defaultStation.id, 'tarateel');
+    assert.equal(defaultStation.id, 'cairo_quran');
+    assert.equal(defaultStation.name, 'إذاعة القرآن الكريم من القاهرة');
+    assert.ok(Array.isArray(defaultStation.fallbackUrls) && defaultStation.fallbackUrls.length >= 1, 'Cairo station must provide verified fallback stream URLs');
 
     const categories = RadioStations.getCategories();
     assert.ok(categories.length >= 2, 'Should provide at least thematic and reciter categories');
@@ -284,4 +286,39 @@ test('radio service: stop cancels any active retry timers and clears src', () =>
     assert.equal(RadioService.retryTimer, null, 'Stop must clear retry timer');
     assert.equal(RadioService.retryCount, 0, 'Stop must reset retry count');
     assert.equal(mockAudio.src, '', 'Stop must detach audio src');
+});
+
+// --------------------------------------------------- 10. Mute / Unmute & Fallback URLs
+test('radio service: mute/unmute toggle and automatic fallback URL cycling on stream failure', () => {
+    global.localStorage = mockStorage();
+    const mockAudio = new MockAudio();
+    RadioService.init({ audio: mockAudio, force: true });
+
+    // Default station is cairo_quran
+    assert.equal(RadioService.station.id, 'cairo_quran');
+    assert.ok(RadioService.getStreamUrl().includes('stream.radiojar.com'));
+
+    // First failure advances fallbackIndex to first fallback URL (qurango.net/radio/mix)
+    mockAudio.emit('error');
+    assert.equal(RadioService.fallbackIndex, 1);
+    assert.ok(RadioService.getStreamUrl().includes('qurango.net/radio/mix'));
+
+    // Mute and unmute
+    assert.equal(RadioService.muted, false);
+    RadioService.toggleMute();
+    assert.equal(RadioService.muted, true);
+    assert.equal(mockAudio.volume, 0);
+
+    RadioService.toggleMute();
+    assert.equal(RadioService.muted, false);
+    assert.equal(mockAudio.volume, 0.8);
+
+    // Raising volume while muted automatically unmutes
+    RadioService.setMuted(true);
+    assert.equal(RadioService.muted, true);
+    RadioService.setVolume(0.5);
+    assert.equal(RadioService.muted, false);
+    assert.equal(mockAudio.volume, 0.5);
+
+    RadioService.stop();
 });
