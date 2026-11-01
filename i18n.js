@@ -27,6 +27,7 @@
                 home: 'الرئيسية',
                 surah: 'القراءة',
                 mushaf: 'المصحف القارئ',
+                prayer: 'مواقيت الصلاة',
                 radio: 'الإذاعة',
                 explore: 'استكشف',
                 playlists: 'القوائم',
@@ -50,6 +51,8 @@
                 radio_title: 'الإذاعة القرآنية المباركة',
                 radio_live: 'مباشر',
                 radio_desc: 'بث حي متواصل لأعذب التلاوات القرآنية بأصوات نخبة من كبار القراء',
+                prayer_title: 'مواقيت الصلاة واتجاه القبلة',
+                prayer_desc: 'حساب دقيق للمواقيت الخمس، بوصلة القبلة، تنبيهات الأذان، ومتابعة الصلوات اليومية',
                 index_title: 'فهرس المصحف',
                 tab_surahs: 'السور',
                 tab_juzs: 'الأجزاء',
@@ -145,6 +148,7 @@
                 home: 'Home',
                 surah: 'Reader',
                 mushaf: 'Digital Mushaf',
+                prayer: 'Prayer Times',
                 radio: 'Radio',
                 explore: 'Explore',
                 playlists: 'Playlists',
@@ -168,6 +172,8 @@
                 radio_title: 'Holy Quran Radio',
                 radio_live: 'Live',
                 radio_desc: 'Continuous live broadcasting of Quran recitations by renowned reciters',
+                prayer_title: 'Prayer Times & Qibla Direction',
+                prayer_desc: 'Accurate daily prayer times, interactive Qibla compass, Adhan alerts, and prayer tracker',
                 index_title: 'Quran Index',
                 tab_surahs: 'Surahs',
                 tab_juzs: 'Juzs',
@@ -325,6 +331,12 @@
                 RadioUI.renderPage();
                 if (typeof RadioService !== 'undefined') {
                     RadioUI.render(RadioService.getSnapshot());
+                }
+            }
+            if (typeof PrayerUI !== 'undefined' && PrayerUI.initialized) {
+                PrayerUI.renderPage();
+                if (typeof PrayerService !== 'undefined') {
+                    PrayerUI.onStateUpdate(PrayerService.getSnapshot());
                 }
             }
             if (typeof QuranDisplay !== 'undefined' && QuranDisplay.surahs && QuranDisplay.surahs.length) {

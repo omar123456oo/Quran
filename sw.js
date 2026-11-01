@@ -9,7 +9,7 @@
  * Downloaded audio and Mushaf pages are managed by the page (offline-audio.js,
  * mushaf-store.js) in their own caches; this worker never writes or deletes them.
  */
-const VERSION = 'v5';
+const VERSION = 'v6';
 const SHELL = `quran-shell-${VERSION}`;
 const STATIC = `quran-static-${VERSION}`;
 const API = `quran-api-${VERSION}`;
@@ -18,13 +18,14 @@ const OWN_PREFIXES = ['quran-shell-', 'quran-static-', 'quran-api-'];
 
 const SHELL_FILES = [
     './', 'index.html', 'manifest.json',
-    'styles.css', 'adhkar-mushaf-styles.css', 'player-styles.css', 'offline-reader.css', 'home-experience.css', 'radio.css',
+    'styles.css', 'adhkar-mushaf-styles.css', 'player-styles.css', 'offline-reader.css', 'home-experience.css', 'radio.css', 'prayer.css',
     'mushaf-meta.js', 'offline-db.js', 'offline-audio.js', 'mushaf-store.js',
     'api-service.js', 'i18n.js', 'app.js', 'quran-display.js', 'play-queue.js', 'playlists.js',
     'playback-store.js', 'audio-player.js', 'tafseer.js', 'translation.js', 'search.js',
     'bookmarks.js', 'settings.js', 'islamic-resources.js', 'adhkar.js', 'digital-mushaf.js',
     'playlists-ui.js', 'downloads-ui.js', 'player-views.js', 'explore.js',
     'radio-stations.js', 'radio-service.js', 'radio-ui.js',
+    'prayer-calc.js', 'prayer-service.js', 'prayer-ui.js',
     'content/stories.js', 'content/miracles.js',
     'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png'
 ];

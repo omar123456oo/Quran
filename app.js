@@ -342,6 +342,10 @@ const App = {
         if (typeof RadioUI !== 'undefined') {
             RadioUI.init();
         }
+
+        if (typeof PrayerUI !== 'undefined') {
+            PrayerUI.init();
+        }
     },
 
     /**
@@ -418,6 +422,9 @@ const App = {
                 break;
             case 'radio':
                 if (typeof RadioUI !== 'undefined') RadioUI.show();
+                break;
+            case 'prayer':
+                if (typeof PrayerUI !== 'undefined') PrayerUI.show();
                 break;
             case 'resources':
                 IslamicResources.loadResources();

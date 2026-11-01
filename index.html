@@ -58,6 +58,7 @@
     <link rel="stylesheet" href="offline-reader.css">
     <link rel="stylesheet" href="home-experience.css">
     <link rel="stylesheet" href="radio.css">
+    <link rel="stylesheet" href="prayer.css">
 
     <!-- Font Awesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
@@ -94,6 +95,7 @@
                     <li><a class="nav-link active" data-page="home" data-i18n="nav.home">الرئيسية</a></li>
                     <li><a class="nav-link" data-page="surah" data-i18n="nav.surah">القراءة</a></li>
                     <li><a class="nav-link" data-page="mushaf" data-i18n="nav.mushaf">المصحف القارئ</a></li>
+                    <li><a class="nav-link" data-page="prayer" data-i18n="nav.prayer">مواقيت الصلاة</a></li>
                     <li><a class="nav-link" data-page="radio" data-i18n="nav.radio">الإذاعة</a></li>
                     <li><a class="nav-link" data-page="explore" data-i18n="nav.explore">استكشف</a></li>
                     <li><a class="nav-link" data-page="playlists" data-i18n="nav.playlists">القوائم</a></li>
@@ -156,6 +158,16 @@
                     <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
                 </button>
 
+                <!-- Entry to Prayer Times & Qibla -->
+                <button type="button" class="hx-teaser hx-prayer-teaser" data-page-go="prayer">
+                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-mosque"></i><i class="fas fa-compass"></i><i class="fas fa-clock"></i></span>
+                    <span class="hx-teaser-text">
+                        <strong><span data-i18n="home.prayer_title">مواقيت الصلاة واتجاه القبلة</span> <span class="hx-radio-badge" id="homePrayerNextBadge" style="color: var(--color-primary);"></span></strong>
+                        <span data-i18n="home.prayer_desc">حساب دقيق للمواقيت الخمس، بوصلة القبلة، تنبيهات الأذان، ومتابعة الصلوات اليومية</span>
+                    </span>
+                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                </button>
+
                 <h2 class="hx-block-title hx-index-title" data-i18n="home.index_title">فهرس المصحف</h2>
 
                 <!-- Navigation Tabs -->
@@ -194,6 +206,11 @@
             <!-- Quran Radio Page -->
             <div id="radioPage" class="page hidden">
                 <!-- Radio content loaded dynamically by RadioUI -->
+            </div>
+
+            <!-- Prayer Times & Qibla Page -->
+            <div id="prayerPage" class="page hidden">
+                <!-- Prayer Times & Qibla loaded dynamically by PrayerUI -->
             </div>
 
             <!-- Playlists & Queue Page -->
@@ -515,6 +532,9 @@
     <script src="radio-stations.js"></script>
     <script src="radio-service.js"></script>
     <script src="radio-ui.js"></script>
+    <script src="prayer-calc.js"></script>
+    <script src="prayer-service.js"></script>
+    <script src="prayer-ui.js"></script>
 </body>
 
 </html>
