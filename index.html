@@ -138,35 +138,46 @@
                     <p class="text-lg" style="color: var(--color-text-gray);" data-i18n="home.surah_count">114 سورة</p>
                 </div>
 
-                <!-- Entry to the Explore page -->
-                <button type="button" class="hx-teaser" data-page-go="explore">
-                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-kaaba"></i><i class="fas fa-book-open-reader"></i><i class="fas fa-star-and-crescent"></i></span>
-                    <span class="hx-teaser-text">
-                        <strong data-i18n="home.explore_title">استكشف القرآن الكريم</strong>
-                        <span data-i18n="home.explore_desc">السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
-                    </span>
-                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
-                </button>
+                <!-- Quick Feature Cards Grid (Explore, Radio, Prayer Times) -->
+                <div class="hx-teasers-grid">
+                    <!-- Entry to the Explore page -->
+                    <button type="button" class="hx-teaser" data-page-go="explore">
+                        <div class="hx-teaser-top">
+                            <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-kaaba"></i><i class="fas fa-book-open-reader"></i><i class="fas fa-star-and-crescent"></i></span>
+                            <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                        </div>
+                        <span class="hx-teaser-text">
+                            <strong data-i18n="home.explore_title">استكشف القرآن الكريم</strong>
+                            <span data-i18n="home.explore_desc">السور المكية والمدنية، قصص الأنبياء، ومعجزاتهم كما وردت في القرآن</span>
+                        </span>
+                    </button>
 
-                <!-- Entry to Quran Radio -->
-                <button type="button" class="hx-teaser hx-radio-teaser" data-page-go="radio">
-                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-radio"></i><i class="fas fa-tower-broadcast"></i><i class="fas fa-volume-high"></i></span>
-                    <span class="hx-teaser-text">
-                        <strong><span data-i18n="home.radio_title">الإذاعة القرآنية المباركة</span> <span class="hx-radio-badge"><i class="fas fa-circle" style="font-size: 8px;"></i> <span data-i18n="home.radio_live">مباشر</span></span></strong>
-                        <span data-i18n="home.radio_desc">بث حي متواصل لأعذب التلاوات القرآنية بأصوات نخبة من كبار القراء</span>
-                    </span>
-                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
-                </button>
+                    <!-- Entry to Quran Radio -->
+                    <button type="button" class="hx-teaser hx-radio-teaser" data-page-go="radio">
+                        <div class="hx-teaser-top">
+                            <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-radio"></i><i class="fas fa-tower-broadcast"></i><i class="fas fa-volume-high"></i></span>
+                            <span class="hx-radio-badge"><i class="fas fa-circle" style="font-size: 8px;"></i> <span data-i18n="home.radio_live">مباشر</span></span>
+                            <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                        </div>
+                        <span class="hx-teaser-text">
+                            <strong data-i18n="home.radio_title">الإذاعة القرآنية المباركة</strong>
+                            <span data-i18n="home.radio_desc">بث حي متواصل لأعذب التلاوات القرآنية بأصوات نخبة من كبار القراء</span>
+                        </span>
+                    </button>
 
-                <!-- Entry to Prayer Times & Qibla -->
-                <button type="button" class="hx-teaser hx-prayer-teaser" data-page-go="prayer">
-                    <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-mosque"></i><i class="fas fa-compass"></i><i class="fas fa-clock"></i></span>
-                    <span class="hx-teaser-text">
-                        <strong><span data-i18n="home.prayer_title">مواقيت الصلاة واتجاه القبلة</span> <span class="hx-radio-badge" id="homePrayerNextBadge" style="color: var(--color-primary);"></span></strong>
-                        <span data-i18n="home.prayer_desc">حساب دقيق للمواقيت الخمس، بوصلة القبلة، تنبيهات الأذان، ومتابعة الصلوات اليومية</span>
-                    </span>
-                    <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
-                </button>
+                    <!-- Entry to Prayer Times & Qibla -->
+                    <button type="button" class="hx-teaser hx-prayer-teaser" data-page-go="prayer">
+                        <div class="hx-teaser-top">
+                            <span class="hx-teaser-icons" aria-hidden="true"><i class="fas fa-mosque"></i><i class="fas fa-compass"></i><i class="fas fa-clock"></i></span>
+                            <span class="hx-prayer-badge" id="homePrayerNextBadge"></span>
+                            <i class="fas fa-chevron-left hx-chev" aria-hidden="true"></i>
+                        </div>
+                        <span class="hx-teaser-text">
+                            <strong data-i18n="home.prayer_title">مواقيت الصلاة واتجاه القبلة</strong>
+                            <span data-i18n="home.prayer_desc">حساب دقيق للمواقيت الخمس، بوصلة القبلة، تنبيهات الأذان، ومتابعة الصلوات اليومية</span>
+                        </span>
+                    </button>
+                </div>
 
                 <h2 class="hx-block-title hx-index-title" data-i18n="home.index_title">فهرس المصحف</h2>
 

@@ -356,7 +356,7 @@
                 const nextName = PrayerService.getPrayerName(snap.countdownState.nextPrayer, isEn ? 'en' : 'ar');
                 const nextTimeObj = snap.todaySchedule.times[snap.countdownState.nextPrayer];
                 const formattedTime = PrayerService.formatPrayerTime(nextTimeObj);
-                homeNextBadge.textContent = `${nextName} · ${formattedTime} (${snap.countdownState.countdownFormatted})`;
+                homeNextBadge.textContent = `${nextName} · ${formattedTime}`;
             }
 
             // Fast DOM update of live countdown elements without re-rendering full page
