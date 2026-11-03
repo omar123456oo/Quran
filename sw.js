@@ -9,7 +9,7 @@
  * Downloaded audio and Mushaf pages are managed by the page (offline-audio.js,
  * mushaf-store.js) in their own caches; this worker never writes or deletes them.
  */
-const VERSION = 'v6';
+const VERSION = 'v7';
 const SHELL = `quran-shell-${VERSION}`;
 const STATIC = `quran-static-${VERSION}`;
 const API = `quran-api-${VERSION}`;

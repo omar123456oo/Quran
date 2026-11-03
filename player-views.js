@@ -56,6 +56,14 @@ const PlayerViews = {
                     <input type="range" id="pvSeek" min="0" max="1000" value="0" step="1" aria-label="موضع التشغيل في الآية">
                     <div class="pv-times"><span id="pvTime">0:00</span><span id="pvCount"></span><span id="pvDur">0:00</span></div>
                 </div>
+                <div class="pv-surah-progress" id="pvSurahProgress" hidden>
+                    <div class="pv-sp-bar" role="progressbar" id="pvSpBar" aria-label="تقدم تلاوة السورة" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="pvSpFill"></span></div>
+                    <div class="pv-sp-meta"><span id="pvSpAyah"></span><span id="pvSpPct"></span><span id="pvSpRemain"></span></div>
+                </div>
+                <div class="pv-mode" role="radiogroup" aria-label="وضع التشغيل">
+                    <button type="button" class="pv-mode-btn" data-pv="mode-single" data-i18n="player.mode_single" role="radio" aria-checked="false">آية واحدة</button>
+                    <button type="button" class="pv-mode-btn" data-pv="mode-surah" data-i18n="player.mode_surah" role="radio" aria-checked="true">السورة كاملة (متواصل)</button>
+                </div>
                 <p class="pv-status" id="pvStatus" role="status" aria-live="polite"></p>
                 <div class="pv-controls">
                     <button type="button" class="pv-icon pv-lg" data-pv="prev-ayah" aria-label="الآية السابقة" title="الآية السابقة">
@@ -128,6 +136,8 @@ const PlayerViews = {
             case 'docked': this.setView('docked'); this.minimize(); break;
             case 'reciter': AudioPlayer.showReciterModal(btn); break;
             case 'compact': this.setView('compact'); break;
+            case 'mode-single': AudioPlayer.setPlayMode('single'); break;
+            case 'mode-surah': AudioPlayer.setPlayMode('surah'); break;
         }
     },
 
@@ -276,6 +286,41 @@ const PlayerViews = {
             if ($('pvTime')) $('pvTime').textContent = App.formatTime(state.time || 0);
             if ($('pvDur')) $('pvDur').textContent = ok ? App.formatTime(state.duration) : '0:00';
             if ($('pvMiniBar')) $('pvMiniBar').style.width = `${(frac * 100).toFixed(1)}%`;
+        }
+
+        if (has('playMode', 'ayah', 'ayahIndex', 'ayahCount', 'time', 'duration', 'status')) this.renderSurahProgress(state);
+    },
+
+    /** Mode selector + overall progress through the Surah (ayahs finished + the fraction of the current one). */
+    renderSurahProgress(state) {
+        const $ = (id) => document.getElementById(id);
+        const n = QuranUtil.toArabicDigits;
+        const single = state.playMode === 'single';
+        document.querySelectorAll('[data-pv^="mode-"]').forEach(b => {
+            const on = b.dataset.pv === `mode-${single ? 'single' : 'surah'}`;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-checked', String(on));
+        });
+        const box = $('pvSurahProgress');
+        if (!box) return;
+        const total = state.ayahCount;
+        box.hidden = single || !total || !state.ayah;
+        if (box.hidden) return;
+        const ok = Number.isFinite(state.duration) && state.duration > 0;
+        const cur = ok ? Math.min(1, (state.time || 0) / state.duration) : 0;
+        const done = state.status === 'ended' ? total : state.ayahIndex + cur;
+        const pct = Math.max(0, Math.min(100, (done / total) * 100));
+        const isEn = typeof I18n !== 'undefined' && I18n.currentLang === 'en';
+        $('pvSpFill').style.width = `${pct.toFixed(1)}%`;
+        $('pvSpBar').setAttribute('aria-valuenow', String(Math.round(pct)));
+        if (isEn) {
+            $('pvSpAyah').textContent = `Ayah ${state.ayah} of ${total}`;
+            $('pvSpPct').textContent = `${Math.floor(pct)}%`;
+            $('pvSpRemain').textContent = `Remaining: ${Math.max(0, total - state.ayahIndex - 1)} ayahs`;
+        } else {
+            $('pvSpAyah').textContent = `الآية ${n(state.ayah)} من ${n(total)}`;
+            $('pvSpPct').textContent = `${n(Math.floor(pct))}٪`;
+            $('pvSpRemain').textContent = `المتبقي: ${n(Math.max(0, total - state.ayahIndex - 1))} آية`;
         }
     }
 };

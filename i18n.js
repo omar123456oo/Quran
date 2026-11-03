@@ -125,7 +125,9 @@
                 repeat_one: 'تكرار السورة الحالية',
                 shuffle: 'تشغيل عشوائي',
                 volume: 'مستوى الصوت',
-                locate: 'عرض في القارئ'
+                locate: 'عرض في القارئ',
+                mode_surah: 'سورة كاملة (متواصل)',
+                mode_single: 'آية واحدة'
             },
 
             // Toasts & Alerts
@@ -246,7 +248,9 @@
                 repeat_one: 'Repeat Surah',
                 shuffle: 'Shuffle',
                 volume: 'Volume',
-                locate: 'Show in Reader'
+                locate: 'Show in Reader',
+                mode_surah: 'Full Surah (Continuous)',
+                mode_single: 'Single Ayah'
             },
 
             // Toasts & Alerts
