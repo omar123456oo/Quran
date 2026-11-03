@@ -20,6 +20,9 @@ const App = {
         // Apply theme
         this.applyTheme();
 
+        // Apply language
+        this.applyLanguage();
+
         // Setup event listeners
         this.setupEventListeners();
 
@@ -60,7 +63,23 @@ const App = {
     /** Service workers need a secure context: HTTPS in production, or localhost in development. */
     registerServiceWorker() {
         if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
-        navigator.serviceWorker.register('sw.js').catch((e) => console.warn('Service worker registration failed', e));
+        // When an updated worker takes over a page that an older one was controlling,
+        // reload once so the page shows the new version instead of the old cached files.
+        const hadController = !!navigator.serviceWorker.controller;
+        let reloaded = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!hadController || reloaded) return;
+            reloaded = true;
+            const st = typeof PlaybackStore !== 'undefined' ? PlaybackStore.get().status : 'idle';
+            if (st === 'playing' || st === 'buffering') {      // never cut a recitation short
+                this.showToast('يتوفر تحديث للتطبيق، وسيظهر عند إعادة فتح الصفحة', 'info');
+                return;
+            }
+            window.location.reload();
+        });
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' })
+            .then((reg) => reg.update())
+            .catch((e) => console.warn('Service worker registration failed', e));
     },
 
     /**
@@ -133,6 +152,7 @@ const App = {
     loadSettings() {
         const defaultSettings = {
             theme: 'light',
+            language: 'ar',
             fontSize: 'medium',
             arabicFont: 'amiri',
             defaultReciter: 'ar.alafasy',
@@ -183,9 +203,43 @@ const App = {
     },
 
     /**
+     * Apply language (AR or EN)
+     */
+    applyLanguage() {
+        const lang = (this.settings && this.settings.language) || 'ar';
+        if (typeof I18n !== 'undefined') {
+            I18n.init(lang);
+        } else {
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+        }
+    },
+
+    /**
+     * Toggle between Arabic and English
+     */
+    toggleLanguage() {
+        if (typeof I18n !== 'undefined') {
+            I18n.toggleLanguage();
+            this.settings.language = I18n.getLanguage();
+        } else {
+            this.settings.language = this.settings.language === 'ar' ? 'en' : 'ar';
+            document.documentElement.lang = this.settings.language;
+            document.documentElement.dir = this.settings.language === 'ar' ? 'rtl' : 'ltr';
+            this.saveSettings();
+        }
+    },
+
+    /**
      * Setup event listeners
      */
     setupEventListeners() {
+        // Language toggle
+        const langToggle = document.getElementById('langToggle');
+        if (langToggle) {
+            langToggle.addEventListener('click', () => this.toggleLanguage());
+        }
+
         // Theme toggle
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
@@ -284,6 +338,14 @@ const App = {
         if (typeof Explore !== 'undefined') {
             Explore.init();
         }
+
+        if (typeof RadioUI !== 'undefined') {
+            RadioUI.init();
+        }
+
+        if (typeof PrayerUI !== 'undefined') {
+            PrayerUI.init();
+        }
     },
 
     /**
@@ -358,12 +420,22 @@ const App = {
             case 'downloads':
                 if (typeof Downloads !== 'undefined') Downloads.show();
                 break;
+            case 'radio':
+                if (typeof RadioUI !== 'undefined') RadioUI.show();
+                break;
+            case 'prayer':
+                if (typeof PrayerUI !== 'undefined') PrayerUI.show();
+                break;
             case 'resources':
                 IslamicResources.loadResources();
                 break;
             case 'settings':
                 Settings.loadSettings();
                 break;
+        }
+
+        if (typeof RadioUI !== 'undefined' && typeof RadioService !== 'undefined' && RadioService.initialized) {
+            RadioUI.renderMiniPlayer(RadioService.getSnapshot());
         }
     },
 
