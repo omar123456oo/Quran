@@ -112,7 +112,7 @@ const external = (urls) => urls.filter(u => !/^(https?:\/\/127\.0\.0\.1|blob:|da
     await ev(`AudioPlayer.pause()`);
     check('pause', await b.waitFor(`PlaybackStore.get().status === 'paused'`, 5000));
     await ev(`AudioPlayer.seek(0.6)`); await sleep(300);
-    check('seek within local file', await ev(`AudioPlayer.audio.currentTime > 0.5 * AudioPlayer.audio.duration`));
+    check('seek within local file', await ev(`AudioPlayer.ayahTime() > 0.5 * AudioPlayer.ayahDuration()`));
     await ev(`AudioPlayer.play()`);
     check('resume', await b.waitFor(`PlaybackStore.get().status === 'playing'`, 5000));
     await ev(`AudioPlayer.audio.playbackRate = 16`);

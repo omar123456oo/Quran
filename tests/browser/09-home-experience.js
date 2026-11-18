@@ -49,6 +49,11 @@ const check = (name, ok, extra = '') => { results.push(!!ok); console.log(`${ok 
       `${before.t.toFixed(2)} → ${after.t.toFixed(2)}`);
     check('compact player shows Surah and verse number', await ev(`document.getElementById('pvMiniTitle').textContent === MushafMeta.surahs[111][0] &&
       document.getElementById('pvMiniSub').textContent.includes('الآية')`));
+    check('compact player has a visible mic button', await ev(`(() => { const m = document.getElementById('pvMiniReciter'); return !!m && m.offsetParent !== null && !!m.querySelector('.fa-microphone'); })()`));
+    await ev(`document.getElementById('pvMiniReciter').click()`); await b.sleep(300);
+    check('compact mic opens the reciter list; playback continues', await ev(`document.getElementById('reciterModal').classList.contains('active') && !AudioPlayer.audio.paused`));
+    await ev(`document.getElementById('closeReciterModal').click()`); await b.sleep(200);
+    check('bar mic is in the main line, not hidden in "more"', await ev(`(() => { const m = document.getElementById('reciterBtn'); return !!m.closest('.ap-side') && !m.closest('#apMore'); })()`));
     check('docked full bar hidden in compact mode', await ev(`getComputedStyle(document.getElementById('audioPlayerContainer')).display === 'none'`));
 
     await ev(`document.querySelector('#pvMini [data-pv="expand"]').click()`); await b.sleep(300);
@@ -62,6 +67,22 @@ const check = (name, ok, extra = '') => { results.push(!!ok); console.log(`${ok 
     check('pause from the dialog', await b.waitFor(`PlaybackStore.get().status === 'paused'`, 5000));
     await ev(`document.querySelector('#pvExpanded [data-pv="toggle"]').click()`);
     check('resume from the dialog', await b.waitFor(`PlaybackStore.get().status === 'playing'`, 8000));
+    // change reciter from the popup (mic button)
+    check('popup has a mic button showing the reciter', await ev(`(() => { const m = document.getElementById('pvReciterBtn');
+      return !!m && !!m.querySelector('.fa-microphone') && m.offsetParent !== null && /العفاسي/.test(m.textContent); })()`));
+    await ev(`window.confirm = () => true; document.getElementById('pvReciterBtn').click()`); await b.sleep(300);
+    check('mic opens the reciter list on top of the popup', await ev(`(() => { const m = document.querySelector('#reciterModal .modal-content'); if (!m) return false;
+      const r = m.getBoundingClientRect(); const top = document.elementFromPoint(r.left + r.width / 2, r.top + 20);
+      return document.getElementById('reciterModal').classList.contains('active') && m.contains(top) && !document.getElementById('pvExpanded').hidden; })()`));
+    await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`); await b.sleep(200);
+    check('Escape closes only the reciter list; focus back on the mic', await ev(`!document.getElementById('reciterModal').classList.contains('active') &&
+      !document.getElementById('pvExpanded').hidden && document.activeElement === document.getElementById('pvReciterBtn')`));
+    await ev(`document.getElementById('pvReciterBtn').click()`); await b.sleep(300);
+    await ev(`[...document.querySelectorAll('#reciterList .reciter-option')].find(o => /الحصري/.test(o.textContent)).click()`);
+    check('choosing a reciter keeps playing with the new voice; popup shows it', await b.waitFor(`AudioPlayer.currentReciter === 'ar.husary' && PlaybackStore.get().status === 'playing'
+      && /الحصري/.test(document.getElementById('pvReciter').textContent) && !document.getElementById('pvExpanded').hidden && !document.getElementById('reciterModal').classList.contains('active')`, 20000));
+    await ev(`AudioPlayer.setReciter('ar.alafasy')`);
+
     await ev(`document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))`); await b.sleep(200);
     check('Escape minimizes', await ev(`document.getElementById('pvExpanded').hidden`));
     await ev(`PlayerViews.open(); document.getElementById('pvOverlay').click()`); await b.sleep(200);

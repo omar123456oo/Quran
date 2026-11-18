@@ -47,10 +47,10 @@ const check = (name, ok, extra = '') => { results.push(ok); console.log(`${ok ? 
     await ev(`AudioPlayer.pause()`);
     await b.sleep(300);
     check('pause → paused, same context', await ev(`PlaybackStore.get().status === 'paused' && PlaybackStore.get().surah === 114`));
-    const tp = await ev(`AudioPlayer.audio.currentTime`);
+    const tp = await ev(`AudioPlayer.ayahTime()`);
     await ev(`AudioPlayer.seek(0.5)`);
     await b.sleep(200);
-    check('seek works', await ev(`Math.abs(AudioPlayer.audio.currentTime - AudioPlayer.audio.duration * 0.5) < 0.3`), `(was ${tp.toFixed(2)})`);
+    check('seek works', await ev(`Math.abs(AudioPlayer.ayahTime() - AudioPlayer.ayahDuration() * 0.5) < 0.3`), `(was ${tp.toFixed(2)})`);
     await ev(`AudioPlayer.play()`);
     check('resume → playing, same ayah/surah', await b.waitFor(`PlaybackStore.get().status === 'playing' && PlaybackStore.get().surah === 114`, 5000));
     await ev(`AudioPlayer.audio.playbackRate = 16`);

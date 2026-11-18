@@ -39,8 +39,14 @@ const PlayerViews = {
                     <button type="button" class="pv-icon" data-pv="minimize" aria-label="تصغير المشغل" title="تصغير">
                         <i class="fas fa-chevron-down" aria-hidden="true"></i></button>
                 </div>
+                <div class="pv-art" id="pvArt" aria-hidden="true"><i class="fas fa-book-quran"></i></div>
                 <h2 class="pv-surah" id="pvSurah"></h2>
-                <p class="pv-reciter" id="pvReciter"></p>
+                <button type="button" class="pv-reciter" data-pv="reciter" id="pvReciterBtn" title="تغيير القارئ">
+                    <i class="fas fa-microphone" aria-hidden="true"></i>
+                    <span id="pvReciter"></span>
+                    <span class="sr-only">— تغيير القارئ</span>
+                    <i class="fas fa-chevron-down pv-reciter-chev" aria-hidden="true"></i>
+                </button>
                 <div class="pv-verse">
                     <p class="pv-basmala" id="pvBasmala" lang="ar" dir="rtl" hidden></p>
                     <p class="pv-ayah" id="pvAyah" lang="ar" dir="rtl"></p>
@@ -49,6 +55,14 @@ const PlayerViews = {
                 <div class="pv-progress">
                     <input type="range" id="pvSeek" min="0" max="1000" value="0" step="1" aria-label="موضع التشغيل في الآية">
                     <div class="pv-times"><span id="pvTime">0:00</span><span id="pvCount"></span><span id="pvDur">0:00</span></div>
+                </div>
+                <div class="pv-surah-progress" id="pvSurahProgress" hidden>
+                    <div class="pv-sp-bar" role="progressbar" id="pvSpBar" aria-label="تقدم تلاوة السورة" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="pvSpFill"></span></div>
+                    <div class="pv-sp-meta"><span id="pvSpAyah"></span><span id="pvSpPct"></span><span id="pvSpRemain"></span></div>
+                </div>
+                <div class="pv-mode" role="radiogroup" aria-label="وضع التشغيل">
+                    <button type="button" class="pv-mode-btn" data-pv="mode-single" data-i18n="player.mode_single" role="radio" aria-checked="false">آية واحدة</button>
+                    <button type="button" class="pv-mode-btn" data-pv="mode-surah" data-i18n="player.mode_surah" role="radio" aria-checked="true">السورة كاملة (متواصل)</button>
                 </div>
                 <p class="pv-status" id="pvStatus" role="status" aria-live="polite"></p>
                 <div class="pv-controls">
@@ -70,6 +84,7 @@ const PlayerViews = {
                     <span class="pv-mini-text"><span class="pv-mini-title" id="pvMiniTitle"></span><span class="pv-mini-sub" id="pvMiniSub"></span></span>
                 </button>
                 <button type="button" class="pv-icon" data-pv="toggle" id="pvMiniPlay" aria-label="تشغيل"><i class="fas fa-play" aria-hidden="true"></i></button>
+                <button type="button" class="pv-icon pv-mic" data-pv="reciter" id="pvMiniReciter" aria-label="تغيير القارئ" title="تغيير القارئ"><i class="fas fa-microphone" aria-hidden="true"></i></button>
                 <button type="button" class="pv-icon" data-pv="expand" aria-label="فتح المشغّل الموسّع" title="توسيع"><i class="fas fa-chevron-up" aria-hidden="true"></i></button>
                 <button type="button" class="pv-icon" data-pv="close" aria-label="إيقاف التشغيل وإغلاق المشغّل" title="إيقاف وإغلاق"><i class="fas fa-xmark" aria-hidden="true"></i></button>
                 <span class="pv-mini-bar" aria-hidden="true"><span id="pvMiniBar"></span></span>
@@ -82,8 +97,10 @@ const PlayerViews = {
         });
         document.getElementById('pvOverlay').addEventListener('click', () => this.minimize());
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && this.expanded) { e.preventDefault(); this.minimize(); }
-        });
+            // With the reciter list open on top, Escape closes only the list.
+            const reciterOpen = document.getElementById('reciterModal')?.classList.contains('active');
+            if (e.key === 'Escape' && this.expanded && !reciterOpen) { e.preventDefault(); this.minimize(); }
+        }, true);   // capture: runs before the list's own Escape handler closes it
         const seek = document.getElementById('pvSeek');
         seek.addEventListener('input', () => { this.seeking = true; });
         seek.addEventListener('change', () => {
@@ -117,7 +134,10 @@ const PlayerViews = {
             case 'close': this.closePlayer(); break;
             case 'locate': this.minimize(); QuranDisplay.jumpToPlaying(); break;
             case 'docked': this.setView('docked'); this.minimize(); break;
+            case 'reciter': AudioPlayer.showReciterModal(btn); break;
             case 'compact': this.setView('compact'); break;
+            case 'mode-single': AudioPlayer.setPlayMode('single'); break;
+            case 'mode-surah': AudioPlayer.setPlayMode('surah'); break;
         }
     },
 
@@ -225,6 +245,8 @@ const PlayerViews = {
             }
             const mini = $('pvMini');
             if (mini) mini.classList.toggle('is-playing', state.status === 'playing');
+            const art = $('pvArt');
+            if (art) art.classList.toggle('is-playing', state.status === 'playing');
         }
 
         if (has('itemId', 'surah', 'ayah', 'ayahText', 'ayahCount', 'ayahIndex', 'kind', 'reciter', 'queue', 'meta', 'status')) {
@@ -264,6 +286,41 @@ const PlayerViews = {
             if ($('pvTime')) $('pvTime').textContent = App.formatTime(state.time || 0);
             if ($('pvDur')) $('pvDur').textContent = ok ? App.formatTime(state.duration) : '0:00';
             if ($('pvMiniBar')) $('pvMiniBar').style.width = `${(frac * 100).toFixed(1)}%`;
+        }
+
+        if (has('playMode', 'ayah', 'ayahIndex', 'ayahCount', 'time', 'duration', 'status')) this.renderSurahProgress(state);
+    },
+
+    /** Mode selector + overall progress through the Surah (ayahs finished + the fraction of the current one). */
+    renderSurahProgress(state) {
+        const $ = (id) => document.getElementById(id);
+        const n = QuranUtil.toArabicDigits;
+        const single = state.playMode === 'single';
+        document.querySelectorAll('[data-pv^="mode-"]').forEach(b => {
+            const on = b.dataset.pv === `mode-${single ? 'single' : 'surah'}`;
+            b.classList.toggle('active', on);
+            b.setAttribute('aria-checked', String(on));
+        });
+        const box = $('pvSurahProgress');
+        if (!box) return;
+        const total = state.ayahCount;
+        box.hidden = single || !total || !state.ayah;
+        if (box.hidden) return;
+        const ok = Number.isFinite(state.duration) && state.duration > 0;
+        const cur = ok ? Math.min(1, (state.time || 0) / state.duration) : 0;
+        const done = state.status === 'ended' ? total : state.ayahIndex + cur;
+        const pct = Math.max(0, Math.min(100, (done / total) * 100));
+        const isEn = typeof I18n !== 'undefined' && I18n.currentLang === 'en';
+        $('pvSpFill').style.width = `${pct.toFixed(1)}%`;
+        $('pvSpBar').setAttribute('aria-valuenow', String(Math.round(pct)));
+        if (isEn) {
+            $('pvSpAyah').textContent = `Ayah ${state.ayah} of ${total}`;
+            $('pvSpPct').textContent = `${Math.floor(pct)}%`;
+            $('pvSpRemain').textContent = `Remaining: ${Math.max(0, total - state.ayahIndex - 1)} ayahs`;
+        } else {
+            $('pvSpAyah').textContent = `الآية ${n(state.ayah)} من ${n(total)}`;
+            $('pvSpPct').textContent = `${n(Math.floor(pct))}٪`;
+            $('pvSpRemain').textContent = `المتبقي: ${n(Math.max(0, total - state.ayahIndex - 1))} آية`;
         }
     }
 };

@@ -1,0 +1,747 @@
+/* ==========================================================================
+   Prayer Times, Qibla Compass & Daily Tracker Styles (prayer.css)
+   Modern Islamic aesthetics: Emerald Green, Gold & Off-White, Dark Mode ready.
+   ========================================================================== */
+
+.prayer-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-3) var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+}
+
+/* ----------------------------------------------------------- Hero Dashboard */
+.prayer-hero {
+    position: relative;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(200, 162, 74, 0.16), transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(255, 255, 255, 0.08), transparent 50%),
+        linear-gradient(135deg, #13523f 0%, #1e7b5f 60%, #165e48 100%);
+    color: #fff;
+    border-radius: var(--radius-2xl);
+    padding: var(--space-6);
+    box-shadow: 0 16px 36px rgba(19, 82, 63, 0.25);
+    border: 1px solid rgba(200, 162, 74, 0.45);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.prayer-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+}
+
+.prayer-location-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: rgba(255, 255, 255, 0.14);
+    backdrop-filter: blur(6px);
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: var(--text-sm);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.prayer-gps-mini-btn {
+    border: 0;
+    background: rgba(200, 162, 74, 0.28);
+    color: #fff;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.prayer-gps-mini-btn:hover {
+    background: var(--color-accent);
+    transform: scale(1.08);
+}
+
+.prayer-dates-pill {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.prayer-hijri-date {
+    color: #f4d68c;
+    font-weight: 700;
+}
+
+.prayer-date-sep {
+    opacity: 0.5;
+}
+
+.prayer-hero-main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--space-2);
+    padding: var(--space-2) 0;
+}
+
+.prayer-current-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    border-radius: var(--radius-full);
+    background: rgba(200, 162, 74, 0.22);
+    border: 1px solid rgba(244, 214, 140, 0.45);
+    color: #f7dfa4;
+    font-size: var(--text-xs);
+}
+
+.prayer-pulse-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #f4d68c;
+    box-shadow: 0 0 8px #f4d68c;
+    animation: radioPulse 1.8s infinite ease-in-out;
+}
+
+.prayer-next-label {
+    font-family: var(--font-arabic);
+    font-size: clamp(1.3rem, 3.2vw, 1.75rem);
+    margin-top: var(--space-1);
+}
+
+.prayer-next-at {
+    font-size: var(--text-base);
+    opacity: 0.85;
+    margin-inline-start: 6px;
+}
+
+.prayer-countdown-clock {
+    font-family: 'Inter', monospace;
+    font-size: clamp(2.2rem, 6vw, 3.4rem);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #fff;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.22);
+    line-height: 1.15;
+}
+
+.prayer-progress-wrap {
+    width: min(440px, 90%);
+    height: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    margin-top: var(--space-2);
+}
+
+.prayer-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #c8a24a, #f4d68c);
+    border-radius: var(--radius-full);
+    transition: width 0.5s ease;
+}
+
+/* ------------------------------------------------------------ Sub-nav Tabs */
+.prayer-subtabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.prayer-subtab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.9);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.prayer-subtab:hover {
+    background: rgba(255, 255, 255, 0.18);
+}
+
+.prayer-subtab.active {
+    background: #f4d68c;
+    color: #13523f;
+    border-color: #f4d68c;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+/* ---------------------------------------------------- Daily Prayer Cards */
+.prayer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-4);
+}
+
+.prayer-card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: var(--space-3);
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+[data-theme="dark"] .prayer-card {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+}
+
+.prayer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.prayer-card.is-next {
+    border: 2px solid var(--color-accent);
+    background: color-mix(in srgb, var(--color-accent) 7%, var(--color-bg-white));
+}
+
+[data-theme="dark"] .prayer-card.is-next {
+    background: color-mix(in srgb, var(--color-accent) 12%, var(--color-dark-surface));
+}
+
+.prayer-card.is-current {
+    border: 2px solid var(--color-primary);
+}
+
+.prayer-card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.prayer-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    color: var(--color-primary);
+    display: grid;
+    place-items: center;
+    font-size: 1.25rem;
+    flex: none;
+}
+
+.prayer-card.is-next .prayer-card-icon {
+    background: var(--color-accent);
+    color: #fff;
+}
+
+.prayer-card.is-current .prayer-card-icon {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.prayer-card-titles {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+}
+
+.prayer-card-name {
+    font-family: var(--font-arabic);
+    font-size: var(--text-xl);
+    margin: 0;
+}
+
+.prayer-badge {
+    font-size: var(--text-xs);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+}
+
+.prayer-badge.next {
+    background: color-mix(in srgb, var(--color-accent) 20%, transparent);
+    color: var(--color-accent);
+}
+
+.prayer-badge.current {
+    background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+    color: var(--color-primary);
+}
+
+.prayer-alert-chip {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: var(--color-primary);
+    display: inline-grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.prayer-alert-chip.is-off {
+    color: var(--color-text-light);
+    opacity: 0.6;
+}
+
+.prayer-card-time {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--color-text-dark);
+    text-align: center;
+    padding: var(--space-1) 0;
+}
+
+[data-theme="dark"] .prayer-card-time {
+    color: var(--color-dark-text);
+}
+
+.prayer-track-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    color: var(--color-text-gray);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+[data-theme="dark"] .prayer-track-btn {
+    background: var(--color-dark-elevated);
+    border-color: var(--color-dark-border);
+    color: var(--color-dark-text-secondary);
+}
+
+.prayer-track-btn.checked {
+    background: color-mix(in srgb, var(--color-success) 14%, transparent);
+    border-color: var(--color-success);
+    color: var(--color-success);
+}
+
+.prayer-sunrise-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+    padding: 8px 0;
+}
+
+/* ---------------------------------------------------- Daily Tracker Panel */
+.prayer-tracker-panel {
+    margin-top: var(--space-5);
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+[data-theme="dark"] .prayer-tracker-panel {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+}
+
+.prayer-tracker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.prayer-tracker-header h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+}
+
+.prayer-tracker-header p {
+    margin: 4px 0 0;
+    font-size: var(--text-sm);
+    color: var(--color-text-gray);
+}
+
+.prayer-tracker-score {
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+}
+
+.prayer-tracker-bar {
+    height: 10px;
+    background: var(--color-bg-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+[data-theme="dark"] .prayer-tracker-bar {
+    background: var(--color-dark-elevated);
+}
+
+.prayer-tracker-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+    border-radius: var(--radius-full);
+    transition: width 0.4s ease;
+}
+
+.prayer-method-footer {
+    margin-top: var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+    text-align: center;
+}
+
+/* ----------------------------------------------------------- Qibla Compass */
+.qibla-panel {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-6);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-5);
+}
+
+[data-theme="dark"] .qibla-panel {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+}
+
+.qibla-compass-wrapper {
+    display: grid;
+    place-items: center;
+    padding: var(--space-2);
+}
+
+.qibla-compass-outer {
+    width: 260px;
+    height: 260px;
+    border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 70%);
+    border: 3px solid color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow-lg);
+}
+
+.qibla-compass-dial {
+    width: 250px;
+    height: 250px;
+    transition: transform 0.25s ease-out;
+    color: var(--color-text-dark);
+}
+
+[data-theme="dark"] .qibla-compass-dial {
+    color: var(--color-dark-text);
+}
+
+.qibla-svg {
+    width: 100%;
+    height: 100%;
+}
+
+.qibla-cardinal {
+    font-size: 14px;
+    font-weight: 700;
+    fill: currentColor;
+}
+
+.qibla-cardinal.north {
+    fill: var(--color-error);
+}
+
+.qibla-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-3);
+    width: 100%;
+    max-width: 720px;
+}
+
+.qibla-stat-box {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+[data-theme="dark"] .qibla-stat-box {
+    background: var(--color-dark-elevated);
+    border-color: var(--color-dark-border);
+}
+
+.qibla-stat-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+}
+
+.qibla-stat-val {
+    font-size: var(--text-xl);
+    color: var(--color-primary);
+}
+
+.qibla-stat-sub {
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+}
+
+.qibla-calibration-note {
+    max-width: 680px;
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 28%, transparent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    text-align: start;
+    font-size: var(--text-sm);
+    color: var(--color-text-gray);
+}
+
+/* --------------------------------------------------------- Weekly Schedule */
+.weekly-panel {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-2xl);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+[data-theme="dark"] .weekly-panel {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+}
+
+.weekly-table-wrap {
+    overflow-x: auto;
+}
+
+.weekly-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.weekly-table th,
+.weekly-table td {
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+}
+
+.weekly-table th:first-child,
+.weekly-table td:first-child {
+    text-align: start;
+}
+
+.weekly-table thead th {
+    background: var(--color-bg-light);
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+[data-theme="dark"] .weekly-table thead th {
+    background: var(--color-dark-elevated);
+}
+
+.weekly-table tr.is-today {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    font-weight: 700;
+}
+
+.weekly-hijri {
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+}
+
+/* ----------------------------------------------------- Settings & Alerts */
+.prayer-settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: var(--space-4);
+}
+
+.prayer-settings-card {
+    background: var(--color-bg-white);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+[data-theme="dark"] .prayer-settings-card {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+}
+
+.prayer-settings-card h3 {
+    margin: 0;
+    font-size: var(--text-lg);
+    color: var(--color-primary);
+}
+
+.prayer-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+}
+
+.prayer-select,
+.prayer-input {
+    padding: 8px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-light);
+    color: var(--color-text-dark);
+    font-family: inherit;
+    font-size: var(--text-sm);
+    min-width: 180px;
+}
+
+[data-theme="dark"] .prayer-select,
+[data-theme="dark"] .prayer-input {
+    background: var(--color-dark-elevated);
+    border-color: var(--color-dark-border);
+    color: var(--color-dark-text);
+}
+
+.prayer-coords-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: var(--space-2);
+    align-items: end;
+}
+
+.prayer-coords-row .prayer-input {
+    min-width: 0;
+    width: 100%;
+}
+
+.prayer-adj-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: var(--space-3);
+}
+
+.prayer-adj-item {
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-2) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+[data-theme="dark"] .prayer-adj-item {
+    background: var(--color-dark-elevated);
+    border-color: var(--color-dark-border);
+}
+
+.prayer-input-num {
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-white);
+    color: var(--color-text-dark);
+    font-weight: 700;
+    text-align: center;
+}
+
+[data-theme="dark"] .prayer-input-num {
+    background: var(--color-dark-surface);
+    border-color: var(--color-dark-border);
+    color: var(--color-dark-text);
+}
+
+.prayer-adj-unit {
+    font-size: var(--text-xs);
+    color: var(--color-text-gray);
+}
+
+.prayer-divider {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: var(--space-2) 0;
+}
+
+.prayer-browser-notice {
+    background: color-mix(in srgb, var(--color-accent) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-accent) 32%, transparent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    display: flex;
+    gap: var(--space-2);
+    align-items: flex-start;
+    color: var(--color-text-gray);
+    line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+    .prayer-hero {
+        padding: var(--space-4);
+    }
+    .prayer-coords-row {
+        grid-template-columns: 1fr;
+    }
+}
+
