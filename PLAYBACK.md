@@ -11,7 +11,8 @@
 | `play-queue.js` | Session queue (current / upcoming / history, shuffle, repeat). Pure logic, unit-tested. |
 | `playlists.js` | Saved playlists. Pure logic, unit-tested. |
 | `playback-store.js` | `PlaybackStore` (single playback state + separate *reading* state), `PlayerStorage` (versioned localStorage), `PlayerState`. |
-| `audio-player.js` | The only `<audio>` element and the engine (load tokens, de-duplicated `ended`, retry, failure skipping). |
+| `audio-player.js` | The persistent `<audio>` element and the engine (load tokens, de-duplicated `ended`, retry, failure skipping). |
+| `gapless-stream.js` | Full Surah mode: consecutive ayah files appended to one MediaSource stream, with no gap between ayahs. Unit-tested. See `docs/GAPLESS_PLAYBACK.md`. |
 | `playlists-ui.js` | "القوائم" page: now playing, queue, playlists, Surah picker. |
 
 ## Behaviour rules

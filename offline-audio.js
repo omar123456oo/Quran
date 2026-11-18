@@ -373,6 +373,13 @@
             return out;
         },
 
+        /** Raw bytes of a stored file (continuous playback appends them to one stream), or null. */
+        async bytes(key) {
+            const cache = await caches.open(CACHE);
+            const res = await cache.match(key);
+            return res ? new Uint8Array(await res.arrayBuffer()) : null;
+        },
+
         async objectUrl(key) {
             const cache = await caches.open(CACHE);
             const res = await cache.match(key);

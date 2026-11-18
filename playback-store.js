@@ -43,6 +43,7 @@
             time: 0, duration: 0,
             volume: 0.8,
             playMode: 'surah',
+            rate: 1,
             message: ''
         },
         reading: { surah: null, ayah: null, page: null },
@@ -127,7 +128,7 @@
         queue: new root.PlayQueue(),
         playlists: new root.PlaylistStore(),
         // playMode: 'surah' = continuous (default, previous behaviour) | 'single' = stop after one ayah
-        prefs: { volume: 0.8, repeatCount: 0, followPlayback: true, playMode: 'surah' },
+        prefs: { volume: 0.8, repeatCount: 0, followPlayback: true, playMode: 'surah', rate: 1 },
         resume: null,   // { itemId, ayah, time } — restored only for the same queue entry
 
         init() {
@@ -140,6 +141,7 @@
                 if (Number.isInteger(p.repeatCount) && p.repeatCount >= 0 && p.repeatCount <= 10) this.prefs.repeatCount = p.repeatCount;
                 if (typeof p.followPlayback === 'boolean') this.prefs.followPlayback = p.followPlayback;
                 if (p.playMode === 'single' || p.playMode === 'surah') this.prefs.playMode = p.playMode;
+                if (typeof p.rate === 'number' && p.rate >= 0.5 && p.rate <= 2) this.prefs.rate = p.rate;
                 const r = data.resume;
                 if (r && this.queue.current && r.itemId === this.queue.current.id &&
                     Number.isInteger(r.ayah) && r.ayah > 0 && Number.isFinite(r.time) && r.time >= 0) {

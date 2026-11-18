@@ -1,10 +1,16 @@
 /**
  * Audio Player — playback engine.
  *
- * One <audio> element is audible at a time (PlaybackStore is the single source of truth). A second
- * element is a standby buffer: it downloads the NEXT ayah while the current one plays, and when the
- * current ayah ends the two elements swap roles, so the next ayah starts from already-buffered data
- * (no src swap, no new request at the boundary). Listeners ignore events from the standby element.
+ * Full Surah mode (gapless): consecutive ayah files are appended to ONE continuous stream
+ * (GaplessSession, Media Source Extensions) on the persistent `audio` element, so there is no
+ * pipeline restart and no inserted silence between ayahs. The current ayah is derived from the
+ * playhead position on the stream timeline. See gapless-stream.js and docs/GAPLESS_PLAYBACK.md.
+ *
+ * Per-file path (Single Ayah mode, whole-Surah tracks, browsers without MediaSource, and as a
+ * fallback when a stream file cannot be fetched): one <audio> element is audible at a time
+ * (PlaybackStore is the single source of truth). A second element is a standby buffer: it downloads
+ * the NEXT ayah while the current one plays, and when the current ayah ends the two elements swap
+ * roles. Listeners ignore events from the standby element.
  * The engine never touches the reader; views subscribe to PlaybackStore, so navigating between
  * screens cannot restart or duplicate playback.
  *
@@ -17,7 +23,9 @@
 
 const AudioPlayer = {
     audio: null,               // the audible element (swaps with nextAudio at every ayah boundary)
-    nextAudio: null,           // standby element that buffers only the next ayah file
+    nextAudio: null,           // standby element that buffers only the next ayah file (per-file path)
+    session: null,             // GaplessSession feeding `audio` in Full Surah mode, or null
+    gaplessEnabled: true,      // false = always use the per-file path
     preloadedIndex: -1,        // ayah index buffered in the standby element
     preloadedSrc: null,
     ayahs: [],                 // resolved, playable ayahs of the current queue item
@@ -63,7 +71,8 @@ const AudioPlayer = {
         const saved = this.reciters.find(r => r.id === App.settings.defaultReciter);
         this.currentReciter = saved ? saved.id : 'ar.alafasy';
         this.audio.volume = this.nextAudio.volume = PlayerState.prefs.volume;
-        PlaybackStore.set({ reciter: this.currentReciter, volume: PlayerState.prefs.volume, playMode: PlayerState.prefs.playMode });
+        this.applyRate(PlayerState.prefs.rate);
+        PlaybackStore.set({ reciter: this.currentReciter, volume: PlayerState.prefs.volume, playMode: PlayerState.prefs.playMode, rate: PlayerState.prefs.rate });
 
         this.setupEventListeners();
         this.setupAudioListeners();
@@ -132,19 +141,32 @@ const AudioPlayer = {
 
     bindAudio(a) {
         const live = () => a === this.audio;
+        const streaming = () => live() && !!this.session;
 
         a.addEventListener('timeupdate', () => {
             if (!live()) return;
-            PlaybackStore.set({ time: a.currentTime });
+            if (this.session) {
+                this.session.tick();
+                PlaybackStore.set({ time: this.session.ayahTime(), duration: this.session.ayahDuration() });
+            } else {
+                PlaybackStore.set({ time: a.currentTime });
+            }
             this.saveResume();
         });
+        a.addEventListener('seeked', () => { if (streaming()) this.session.tick(); });
         const meta = () => {
+            if (streaming()) {     // the element's duration is the whole stream; show the ayah's own
+                const d = this.session.ayahDuration();
+                if (d > 0) PlaybackStore.set({ duration: d });
+                return;
+            }
             if (live() && Number.isFinite(a.duration)) PlaybackStore.set({ duration: a.duration });
         };
         a.addEventListener('durationchange', meta);
         a.addEventListener('loadedmetadata', () => {
             if (!live()) return;
             this.switching = false;
+            if (this.session) { meta(); return; }
             if (this.pendingSeek !== null) {
                 const t = this.pendingSeek;
                 this.pendingSeek = null;
@@ -158,6 +180,7 @@ const AudioPlayer = {
             this.failures = 0;
             this.skips = 0;
             PlaybackStore.set({ status: 'playing', message: '' });
+            if (this.session) this.session.schedule();
         });
         a.addEventListener('waiting', () => {
             if (live() && PlaybackStore.get().status === 'playing') PlaybackStore.set({ status: 'buffering' });
@@ -175,6 +198,14 @@ const AudioPlayer = {
             // Guard against a second 'ended' for the same ayah (e.g. rapid events/races).
             if (this.endedSerial === this.ayahSerial) return;
             this.endedSerial = this.ayahSerial;
+            const s = this.session;
+            if (s) {
+                // End of the continuous stream: the item is finished, or a file further on could not
+                // be fetched and the stream was closed after the last good ayah — continue from there.
+                if (s.failedAt !== null && s.failedAt < this.ayahs.length) this.playIndex(s.failedAt, { autoplay: true, legacy: true });
+                else this.onItemEnded();
+                return;
+            }
             this.onAyahEnded();
         });
         a.addEventListener('error', () => { if (live()) this.onAudioFailure(); });
@@ -188,9 +219,7 @@ const AudioPlayer = {
         // Lock-screen next/previous step through ayahs; at the ends they move between queue items.
         set('nexttrack', () => { if (!this.nextAyah()) this.playNext(); });
         set('previoustrack', () => { if (!this.previousAyah()) this.playPrevious(); });
-        set('seekto', (d) => {
-            if (d && Number.isFinite(d.seekTime) && Number.isFinite(this.audio.duration)) this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, d.seekTime));
-        });
+        set('seekto', (d) => { if (d && Number.isFinite(d.seekTime)) this.seekAyahTime(d.seekTime); });
     },
 
     /* ------------------------------------------------------ loading */
@@ -214,15 +243,30 @@ const AudioPlayer = {
         else data = await APIService.getJuz(item.ref, reciter);
         if (!data || !Array.isArray(data.ayahs)) throw new Error('Unexpected API response');
         return data.ayahs
-            .map(a => ({
-                surah: a.surah ? a.surah.number : data.number,
-                numberInSurah: a.numberInSurah,
-                text: typeof a.text === 'string' ? a.text : '',
-                audio: typeof a.audio === 'string' && /^https:\/\//.test(a.audio) ? a.audio : null,
-                page: a.page,
-                juz: a.juz
-            }))
+            .map(a => {
+                const surah = a.surah ? a.surah.number : data.number;
+                return {
+                    surah,
+                    numberInSurah: a.numberInSurah,
+                    text: typeof a.text === 'string' ? a.text : '',
+                    audio: typeof a.audio === 'string' && /^https:\/\//.test(a.audio) ? a.audio : null,
+                    stream: this.streamUrl(reciter, surah, a.numberInSurah),
+                    page: a.page,
+                    juz: a.juz
+                };
+            })
             .filter(a => a.audio && Number.isInteger(a.surah) && Number.isInteger(a.numberInSurah));
+    },
+
+    /**
+     * URL of the same ayah file on the CORS-enabled mirror (everyayah.com), whose audio frames are
+     * byte-identical to the API's files (docs/OFFLINE_AUDIT.md). The continuous stream needs the
+     * file bytes, which the API's CDN does not allow a page to read (no CORS); `audio` stays the
+     * API URL and is still used by the per-file path.
+     */
+    streamUrl(reciter, surah, ayah) {
+        return typeof OfflineAudioCore !== 'undefined' && Number.isInteger(surah) && Number.isInteger(ayah)
+            ? OfflineAudioCore.mirrorUrl(reciter, surah, ayah) : null;
     },
 
     /**
@@ -239,10 +283,11 @@ const AudioPlayer = {
         return data.ayahs
             .map(a => {
                 const surah = a.surah ? a.surah.number : data.number;
+                const url = OfflineAudioCore.mirrorUrl(reciter, surah, a.numberInSurah);
                 return {
                     surah, numberInSurah: a.numberInSurah,
                     text: typeof a.text === 'string' ? a.text : '',
-                    audio: OfflineAudioCore.mirrorUrl(reciter, surah, a.numberInSurah),
+                    audio: url, stream: url,
                     page: a.page, juz: a.juz
                 };
             })
@@ -313,24 +358,41 @@ const AudioPlayer = {
         this.playIndex(idx, { autoplay, seek });
     },
 
-    /** Play ayah #i of the loaded item. */
+    /** Playback state for ayah #i (shared by the stream and per-file paths). */
+    ayahState(i, extra) {
+        const a = this.ayahs[i];
+        return Object.assign({
+            surah: a.surah, ayah: a.wholeSurah ? null : a.numberInSurah,
+            ayahIndex: i, ayahCount: a.wholeSurah ? 0 : this.ayahs.length,
+            page: a.page, juz: a.juz, ayahText: a.text, audioSrc: a.audio || a.localKey,
+            message: '', local: !!a.localKey
+        }, extra);
+    },
+
+    /**
+     * Play ayah #i of the loaded item. Full Surah mode uses the continuous stream (seeking inside
+     * it when the ayah is already buffered); `legacy: true` forces the per-file path.
+     */
     playIndex(i, opts) {
-        const { autoplay = true, seek = 0 } = opts || {};
+        const { autoplay = true, seek = 0, legacy = false } = opts || {};
         const a = this.ayahs[i];
         if (!a) return;
+        if (!legacy) {
+            const s = this.session;
+            if (s && s.list === this.ayahs && s.failedAt === null && s.has(i) && PlayerState.prefs.playMode === 'surah') {
+                this.seekStream(i, seek, autoplay);
+                return;
+            }
+            if (this.canStream(i)) { this.startStream(i, { autoplay, seek }); return; }
+        }
+        this.endStream();
         this.ayahIndex = i;
         this.ayahSerial += 1;
         const serial = this.ayahSerial;
         this.retryCount = 0;
         this.switching = true;
         this.pendingSeek = seek > 0 ? seek : null;
-        PlaybackStore.set({
-            status: autoplay ? 'loading' : 'paused',
-            surah: a.surah, ayah: a.wholeSurah ? null : a.numberInSurah,
-            ayahIndex: i, ayahCount: a.wholeSurah ? 0 : this.ayahs.length,
-            page: a.page, juz: a.juz, ayahText: a.text, audioSrc: a.audio || a.localKey,
-            time: seek || 0, duration: 0, message: '', local: !!a.localKey
-        });
+        PlaybackStore.set(this.ayahState(i, { status: autoplay ? 'loading' : 'paused', time: seek || 0, duration: 0 }));
         const start = (src, objectUrl) => {
             if (serial !== this.ayahSerial) { if (objectUrl) URL.revokeObjectURL(src); return; }   // superseded
             this.releaseObjectUrl();
@@ -359,6 +421,114 @@ const AudioPlayer = {
         if (this.objectUrl) { URL.revokeObjectURL(this.objectUrl); this.objectUrl = null; }
     },
 
+    /* ------------------------------------------------ continuous (gapless) stream */
+    /** Full Surah mode, per-ayah files with a readable byte source from ayah i onward. */
+    canStream(i) {
+        if (!this.gaplessEnabled || PlayerState.prefs.playMode !== 'surah') return false;
+        if (typeof GaplessSession === 'undefined' || !GaplessSession.supported()) return false;
+        const rest = this.ayahs.slice(i);
+        return rest.length > 0 && rest.every(a => !a.wholeSurah && (a.stream || a.localKey));
+    },
+
+    /** Start a continuous stream at ayah i on the persistent element (no new element). */
+    startStream(i, { autoplay = true, seek = 0 } = {}) {
+        this.endStream();
+        this.clearStandby();
+        this.releaseObjectUrl();
+        this.ayahIndex = i;
+        this.ayahSerial += 1;
+        this.retryCount = 0;
+        this.pendingSeek = null;
+        this.switching = true;
+        PlaybackStore.set(this.ayahState(i, { status: autoplay ? 'loading' : 'paused', time: seek || 0, duration: 0 }));
+        const s = new GaplessSession({
+            el: this.audio, list: this.ayahs, start: i, offset: seek > 0 ? seek : 0,
+            load: (a, signal) => this.ayahBytes(a, signal),
+            onAyah: (k) => this.onStreamAyah(s, k),
+            onFailure: (k, err) => this.onStreamFailure(s, k, err)
+        });
+        this.session = s;
+        s.open();
+        this.audio.playbackRate = this.audio.defaultPlaybackRate;   // a new source resets the rate
+        if (autoplay) this.safePlay();
+        this.saveResume(true);
+    },
+
+    /** Detach the stream object (the element itself is kept and reused). */
+    endStream() {
+        if (!this.session) return;
+        this.session.destroy();
+        this.session = null;
+    },
+
+    /** Bytes of one ayah file: the downloaded copy when there is one, otherwise the mirror. */
+    async ayahBytes(a, signal) {
+        if (a.localKey && typeof OfflineAudio !== 'undefined' && OfflineAudio.bytes) {
+            const local = await OfflineAudio.bytes(a.localKey);
+            if (local) return local;
+            if (navigator.onLine === false) throw new Error('Stored file missing');
+        }
+        const res = await fetch(a.stream || a.localKey, { signal, mode: 'cors', credentials: 'omit' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return new Uint8Array(await res.arrayBuffer());
+    },
+
+    /** The playhead crossed into ayah k of the stream. */
+    onStreamAyah(s, k) {
+        if (s !== this.session || !this.ayahs[k]) return;
+        this.ayahIndex = k;
+        this.ayahSerial += 1;
+        this.retryCount = 0;
+        PlaybackStore.set(this.ayahState(k, { time: s.ayahTime(), duration: s.ayahDuration(k) }));
+        this.saveResume(true);
+    },
+
+    /** Not even the first file of the stream could be loaded: use the per-file path for it. */
+    onStreamFailure(s, k, err) {
+        if (s !== this.session) return;
+        console.warn('Continuous stream unavailable, using per-file playback', err);
+        const st = PlaybackStore.get().status;
+        const autoplay = st === 'loading' || st === 'playing' || st === 'buffering';
+        this.playIndex(k, { autoplay, seek: k === s.start ? s.offset : 0, legacy: true });
+    },
+
+    /** Jump to an ayah that is already in the stream (instant: no new request, no reload). */
+    seekStream(i, seek, autoplay) {
+        const s = this.session;
+        this.ayahIndex = i;
+        this.ayahSerial += 1;
+        this.retryCount = 0;
+        s.seek(i, seek);
+        const paused = this.audio.paused;
+        PlaybackStore.set(this.ayahState(i, {
+            status: autoplay ? (paused ? 'loading' : PlaybackStore.get().status) : 'paused',
+            time: s.ayahTime(), duration: s.ayahDuration(i)
+        }));
+        if (autoplay && paused) this.safePlay();
+        else if (!autoplay && !paused) { this.switching = true; this.audio.pause(); this.switching = false; }
+        this.saveResume(true);
+    },
+
+    /** Position inside the current ayah, in seconds (stream or per-file). */
+    ayahTime() {
+        return this.session ? this.session.ayahTime() : (this.audio.currentTime || 0);
+    },
+
+    ayahDuration() {
+        if (this.session) return this.session.ayahDuration();
+        return Number.isFinite(this.audio.duration) ? this.audio.duration : NaN;
+    },
+
+    /** Seek inside the current ayah. */
+    seekAyahTime(t) {
+        const d = this.ayahDuration();
+        if (!Number.isFinite(d) || d <= 0) return;
+        const v = Math.max(0, Math.min(d, t));
+        if (this.session) this.session.seek(this.session.current, v);
+        else this.audio.currentTime = v;
+        PlaybackStore.set({ time: v });
+    },
+
     /**
      * Buffer the NEXT ayah in the standby element (Full Surah mode only, per-ayah files only).
      * Local/offline files are served from storage and whole-Surah tracks have no "next".
@@ -366,7 +536,8 @@ const AudioPlayer = {
     preloadNext() {
         const i = this.ayahIndex + 1;
         const n = this.ayahs[i];
-        const wanted = n && n.audio && !n.localKey && !n.wholeSurah && PlayerState.prefs.playMode !== 'single';
+        // The continuous stream takes over at the next boundary when it can: no standby needed.
+        const wanted = n && n.audio && !n.localKey && !n.wholeSurah && PlayerState.prefs.playMode !== 'single' && !this.canStream(i);
         if (!wanted) { this.clearStandby(); return; }
         if (this.preloadedIndex === i && this.preloadedSrc === n.audio) return;   // already buffering/buffered
         this.nextAudio.preload = 'auto';
@@ -394,6 +565,7 @@ const AudioPlayer = {
      */
     advanceTo(i) {
         const a = this.ayahs[i];
+        if (this.canStream(i)) { this.startStream(i, { autoplay: true }); return; }
         const standby = this.nextAudio;
         const ready = !!a && !!a.audio && !a.localKey &&
             this.preloadedIndex === i && this.preloadedSrc === a.audio &&
@@ -467,6 +639,7 @@ const AudioPlayer = {
     /** Stop sound and detach the source without raising an error event. */
     halt() {
         this.switching = true;
+        this.endStream();
         this.audio.pause();
         this.audio.removeAttribute('src');
         this.audio.load();
@@ -496,8 +669,16 @@ const AudioPlayer = {
         PlayerState.prefs.playMode = mode;
         PlaybackStore.set({ playMode: mode });
         PlayerState.persist();
-        if (mode === 'single') this.clearStandby();
-        else if (this.loadedItemId) this.preloadNext();
+        if (mode === 'single') {
+            this.clearStandby();
+            // The stream would run on into the next ayah: continue this ayah, from the same
+            // position, on the per-file path, which stops at its end.
+            if (this.session && this.ayahs[this.ayahIndex]) {
+                const st = PlaybackStore.get().status;
+                const playing = st === 'playing' || st === 'buffering' || st === 'loading';
+                this.playIndex(this.ayahIndex, { autoplay: playing, seek: this.ayahTime(), legacy: true });
+            }
+        } else if (this.loadedItemId) this.preloadNext();
         App.showToast(mode === 'single' ? 'وضع الآية الواحدة: يتوقف التشغيل بعد الآية' : 'وضع السورة كاملة: تشغيل متواصل حتى آخر آية', 'info');
     },
 
@@ -562,6 +743,14 @@ const AudioPlayer = {
 
     onAudioFailure() {
         if (!this.audio.getAttribute('src')) return;
+        if (this.session) {
+            // The stream itself failed (e.g. decode error): continue this ayah on the per-file path.
+            const st = PlaybackStore.get().status;
+            const playing = st === 'playing' || st === 'buffering' || st === 'loading';
+            console.warn('Continuous stream error, using per-file playback', this.audio.error);
+            this.playIndex(this.ayahIndex, { autoplay: playing, seek: this.ayahTime(), legacy: true });
+            return;
+        }
         const serial = this.ayahSerial;
         const MAX_RETRIES = 2;
         if (this.retryCount < MAX_RETRIES) {       // automatic retries with growing delay (transient network errors)
@@ -664,14 +853,35 @@ const AudioPlayer = {
         }
     },
 
+    /** Seek to a fraction of the current ayah. */
     seek(fraction) {
-        if (!Number.isFinite(this.audio.duration)) return;
-        this.audio.currentTime = Math.max(0, Math.min(1, fraction)) * this.audio.duration;
+        const d = this.ayahDuration();
+        if (!Number.isFinite(d)) return;
+        this.seekAyahTime(Math.max(0, Math.min(1, fraction)) * d);
     },
 
     seekBy(seconds) {
-        if (!Number.isFinite(this.audio.duration)) return;
-        this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, this.audio.currentTime + seconds));
+        this.seekAyahTime(this.ayahTime() + seconds);
+    },
+
+    /** Playback speed (0.5–2); pitch is preserved by the browser. Applies to both paths. */
+    setPlaybackRate(rate) {
+        const r = Number(rate);
+        if (!Number.isFinite(r)) return;
+        const v = Math.max(0.5, Math.min(2, r));
+        this.applyRate(v);
+        PlayerState.prefs.rate = v;
+        PlaybackStore.set({ rate: v });
+        PlayerState.persist();
+    },
+
+    applyRate(v) {
+        const r = Number.isFinite(v) && v > 0 ? v : 1;
+        [this.audio, this.nextAudio].forEach(el => {
+            if (!el) return;
+            el.defaultPlaybackRate = r;
+            el.playbackRate = r;
+        });
     },
 
     setVolume(volume) {
@@ -795,7 +1005,7 @@ const AudioPlayer = {
         if (!force && now - this.lastResumeSave < 5000) return;
         this.lastResumeSave = now;
         const s = PlaybackStore.get();
-        PlayerState.resume = { itemId: item.id, surah: s.surah, ayah: s.ayah, time: force ? 0 : Math.floor(this.audio.currentTime || 0) };
+        PlayerState.resume = { itemId: item.id, surah: s.surah, ayah: s.ayah, time: force ? 0 : Math.floor(this.ayahTime()) };
         PlayerState.persist();
     },
 
@@ -1018,7 +1228,7 @@ const AudioPlayer = {
         if (live && newList && item === this.queue.current) {
             const cur = this.ayahs[this.ayahIndex];
             const wasPlaying = status === 'playing' || status === 'buffering';
-            const time = this.audio.currentTime || 0;
+            const time = this.ayahTime();
             const idx = newList.findIndex(a => cur && a.surah === cur.surah && a.numberInSurah === cur.numberInSurah);
             this.ayahs = newList;
             this.playIndex(idx >= 0 ? idx : 0, { autoplay: wasPlaying, seek: idx >= 0 ? time : 0 });

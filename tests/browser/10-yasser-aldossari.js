@@ -16,14 +16,14 @@ const FOLDER = 'https://everyayah.com/data/Yasser_Ad-Dussary_128kbps/';
     await ev(`PlayerViews.minimize(); PlayerViews.setView('docked'); document.getElementById('reciterBtn').click()`);
     check('reciter menu lists ياسر الدوسري', await b.waitFor(`[...document.querySelectorAll('#reciterList .reciter-option')].some(o => /ياسر الدوسري/.test(o.textContent))`, 5000));
     await ev(`[...document.querySelectorAll('#reciterList .reciter-option')].find(o => /ياسر الدوسري/.test(o.textContent)).click()`);
-    check('switching keeps playing, now from the Dosari folder', await b.waitFor(`AudioPlayer.currentReciter === 'yasser.aldossari' && PlaybackStore.get().status === 'playing' && AudioPlayer.audio.src.startsWith('${FOLDER}')`, 20000),
-      await ev('AudioPlayer.audio.src'));
+    check('switching keeps playing, now from the Dosari folder', await b.waitFor(`AudioPlayer.currentReciter === 'yasser.aldossari' && PlaybackStore.get().status === 'playing' && PlaybackStore.get().audioSrc.startsWith('${FOLDER}')`, 20000),
+      await ev('PlaybackStore.get().audioSrc'));
     check('reciter name shown in the player', await ev(`document.getElementById('currentReciter').textContent === 'ياسر الدوسري'`));
     await ev(`PlayerViews.setView('compact'); AudioPlayer.playNow('surah', 112)`);
-    check('Surah 112 plays ayah 1 file 112001.mp3', await b.waitFor(`PlaybackStore.get().surah === 112 && PlaybackStore.get().ayah === 1 && PlaybackStore.get().status === 'playing' && AudioPlayer.audio.src === '${FOLDER}112001.mp3'`, 20000));
+    check('Surah 112 plays ayah 1 file 112001.mp3', await b.waitFor(`PlaybackStore.get().surah === 112 && PlaybackStore.get().ayah === 1 && PlaybackStore.get().status === 'playing' && PlaybackStore.get().audioSrc === '${FOLDER}112001.mp3'`, 20000));
     check('verse text and count come from the Quran text (4 ayahs)', await ev(`PlaybackStore.get().ayahCount === 4 && PlaybackStore.get().ayahText.length > 5`));
     await ev(`AudioPlayer.nextAyah()`);
-    check('next verse → 112002.mp3', await b.waitFor(`PlaybackStore.get().ayah === 2 && AudioPlayer.audio.src === '${FOLDER}112002.mp3' && PlaybackStore.get().status === 'playing'`, 15000));
+    check('next verse → 112002.mp3', await b.waitFor(`PlaybackStore.get().ayah === 2 && PlaybackStore.get().audioSrc === '${FOLDER}112002.mp3' && PlaybackStore.get().status === 'playing'`, 15000));
     await ev(`AudioPlayer.audio.playbackRate = 16`);
     check('continues to the next ayah by itself', await b.waitFor(`PlaybackStore.get().ayah >= 3`, 20000));
     await ev(`AudioPlayer.audio.playbackRate = 1; AudioPlayer.playNow('page', 604)`);
