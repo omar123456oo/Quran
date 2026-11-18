@@ -53,6 +53,8 @@ const AudioPlayer = {
         { id: 'ar.abdurrahmaansudais', name: 'عبد الرحمن السديس', nameEn: 'Abdurrahman As-Sudais' },
         { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي', nameEn: 'Maher Al-Muaiqly' },
         { id: 'ar.mahmoudalialbanna', name: 'محمود علي البنا', nameEn: 'Mahmoud Ali Al-Banna', surahOnly: true },
+        // alquran.cloud publishes Khalid Al-Jalil only as one file per Surah (no per-ayah source found).
+        { id: 'ar.khalidaljalil', name: 'خالد الجليل', nameEn: 'Khalid Al-Jalil', surahOnly: true },
         // Per-ayah files exist only on everyayah.com (alquran.cloud has whole-Surah files only).
         { id: 'yasser.aldossari', name: 'ياسر الدوسري', nameEn: 'Yasser Al-Dosari', mirrorOnly: true }
     ],
